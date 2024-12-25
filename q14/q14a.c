@@ -22,10 +22,10 @@ position simulate_one(int dim[2], int p[2], int v[2]){
 }
 
 int main(){
-    // int dim[2] = {101,103};
     FILE* inputs;
-    int dim[2] = {11,7};
-    errno_t err = fopen_s(&inputs,"test.txt", "r");
+    int dim[2] = {101,103};
+    // int dim[2] = {11,7};
+    errno_t err = fopen_s(&inputs,"q14.txt", "r");
     int quad1 = 0;
     int quad2 = 0;
     int quad3 = 0;
