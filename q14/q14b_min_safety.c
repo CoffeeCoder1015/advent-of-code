@@ -114,14 +114,13 @@ int main(){
     int sim_forward = 0;
     double lowest_fstd = 1000000000;
     int f_c = 0;
+    int best_sim_forward = 0;
     for (;;) {
         int quad1 = 0;
         int quad2 = 0;
         int quad3 = 0;
         int quad4 = 0;
         char* map = new_str_map(dim[0], dim[1]);
-        int* x_cord = malloc(sizeof(int)*robot_count);
-        int* y_cord = malloc(sizeof(int)*robot_count);
         for (int i = 0; i < robot_count; i++) {
             robot_data one_robot = all_data[i];
             int* p = one_robot.p;
@@ -145,23 +144,21 @@ int main(){
                 }
             }   
             map[index] = '*';
-            x_cord[i] = p[0];
-            y_cord[i] = p[1];
         } 
         int safety_factor = quad1*quad2*quad3*quad4;
-        double xstd = std_dev(x_cord, robot_count).std;
-        double ystd = std_dev(y_cord, robot_count).std;
-        printf("%f %f\n",xstd,ystd);
         if (safety_factor < lowest_fstd) {
             lowest_fstd = safety_factor; 
-            printf("%d %d\n",sim_forward,safety_factor);
-            printf("%s %d\n",map,sim_forward);
+            best_sim_forward = sim_forward;
+            // NOTE: outputs the trail of lowing safety_factors
+            // printf("%d %d\n",sim_forward,safety_factor);
+            // printf("%s %d\n",map,sim_forward);
         }
         free(map);
         sim_forward++;
-        if (sim_forward == 10000) {
+        if (sim_forward == dim[0]*dim[1]) {
             break; 
         }
     }
     fclose(inputs);
+    printf("%d\n",best_sim_forward);
 }
