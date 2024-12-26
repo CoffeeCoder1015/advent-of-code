@@ -1,3 +1,4 @@
+// Another solution method using CRT  --> what it is https://crypto.stanford.edu/pbc/notes/numbertheory/crt.html
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -55,7 +56,7 @@ stats_pack std_dev(int* array, int n){
     double mean = x_sum/n;
     double square_diff_sum = 0;
     for (int i = 0; i <n ; i++) {
-        square_diff_sum += pow(array[i]-mean, 4) ;
+        square_diff_sum += pow(array[i]-mean, 2) ;
     }
     double var = square_diff_sum/n;
     return (stats_pack){mean,sqrt(var)};
@@ -105,49 +106,54 @@ int main(){
         all_data = realloc(all_data, sizeof(robot_data)*robot_count);
         all_data[robot_count-1] = one_robot;
     }
-    int sim_forward = 0;
-    double lowest_fstd = 1000000000;
-    int f_c = 0;
-    for (;;) {
-        int quad1 = 0;
-        int quad2 = 0;
-        int quad3 = 0;
-        int quad4 = 0;
-        char* map = new_str_map(dim[0], dim[1]);
+    double best_xstd = 100000;
+    double tx = 0;
+    double best_ystd = 100000;
+    double ty = 0;
+    int invW = 0;
+    for (int sim_forward = 0;sim_forward < dim[1]; sim_forward++) { //disim_forward[1] = 103
+        int* x_cord = malloc(sizeof(int)*robot_count);
+        int* y_cord = malloc(sizeof(int)*robot_count);
+
+        //calculating modulo inverse of W
+        int test_invW = modulo(sim_forward * dim[0], dim[1]);
+        if (test_invW == 1) {
+            invW =  sim_forward;
+        }
+
         for (int i = 0; i < robot_count; i++) {
             robot_data one_robot = all_data[i];
             int* p = one_robot.p;
             int* v = one_robot.v;
             position final_pos = simulate_one(dim, p, v,sim_forward);
-            int index  =final_pos.y*(dim[0]+1)+final_pos.x;
-
-            int x_diff = final_pos.x - ( dim[0] / 2  );
-            int y_diff = final_pos.y - ( dim[1] / 2  );
-            int x_state = ( x_diff >> 31 ) | (x_diff != 0);
-            int y_state = ( y_diff >> 31 ) | (y_diff != 0);
-            if ((x_state != 0) && (y_state != 0)) {
-                if (x_state == -1 && y_state == -1) {
-                    quad1 += 1;         
-                } else if (x_state == -1 && y_state == 1){
-                    quad2 += 1;
-                } else if (x_state == 1 && y_state == -1) {
-                    quad3 += 1;
-                } else {
-                    quad4 += 1;
-                }
-            }   map[index] = '*';
+            x_cord[i] = final_pos.x;
+            y_cord[i] = final_pos.y;
         } 
-        int safety_factor = quad1*quad2*quad3*quad4;
-        if (safety_factor < lowest_fstd) {
-            lowest_fstd = safety_factor; 
-            printf("%d %d\n",sim_forward,safety_factor);
-            // printf("%s %d\n",map,sim_forward);
+        double xstd = std_dev(x_cord, robot_count).std;
+        double ystd = std_dev(y_cord, robot_count).std;
+        if (xstd < best_xstd) {
+            tx = sim_forward;
+            best_xstd = xstd;
         }
-        free(map);
-        sim_forward++;
-        if (sim_forward == 1000000) {
-            break; 
+        if (ystd < best_ystd) {
+            ty = sim_forward; 
+            best_ystd = ystd;
         }
+        free(x_cord);
+        free(y_cord);
     }
+    int t = tx + modulo(((ty-tx)*invW), dim[1]) * dim[0];
+    printf("%d %f %f\n",t,tx,ty);
+    char* map = new_str_map(dim[0], dim[1]);
+    for (int i = 0; i < robot_count; i++) {
+        robot_data one_robot = all_data[i];
+        int* p = one_robot.p;
+        int* v = one_robot.v;
+        position final_pos = simulate_one(dim, p, v,t);
+        int index  =final_pos.y*(dim[0]+1)+final_pos.x;
+        map[index] = '*';
+    }
+    printf("%s\n",map);
+    free(map);
     fclose(inputs);
 }
