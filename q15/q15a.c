@@ -49,6 +49,8 @@ int main() {
     char* instructions = malloc(sizeof(char)*(read_count+1));
     fread(instructions,sizeof(char),read_count,inputs);
     instructions[read_count-1] = '\0';
+    fclose(inputs);
+
     // direction chr codes
     // <  60
     // v 118
@@ -121,5 +123,5 @@ int main() {
     }
     printf("%d\n",cord_sum);
     free(map);
-    fclose(inputs);
+    free(instructions);
 }
