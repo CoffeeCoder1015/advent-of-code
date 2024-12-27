@@ -22,7 +22,7 @@ bool inArrayC(int check[2], int ( *array )[2], int n){
 }
 int main() {
     FILE *inputs;
-    errno_t err = fopen_s(&inputs,"test.txt", "rb");
+    errno_t err = fopen_s(&inputs,"q15.txt", "rb");
 
     int pos[2] = {0,0};
     int y_size = 0;
@@ -196,5 +196,6 @@ int main() {
     }
     printf("%d\n",cord_sum);
     free(map);
+    free(instructions);
     fclose(inputs);
 }
