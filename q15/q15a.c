@@ -7,7 +7,7 @@
 #include <string.h>
 int main() {
     FILE *inputs;
-    errno_t err = fopen_s(&inputs,"test.txt", "rb");
+    errno_t err = fopen_s(&inputs,"q15.txt", "rb");
 
     size_t last_len;
     int pos[2] = {0,0};
