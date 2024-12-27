@@ -1,5 +1,6 @@
 #include <corecrt.h>
 #include <math.h>
+#include <setjmp.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -7,39 +8,58 @@
 #include <string.h>
 int main() {
     FILE *inputs;
-    errno_t err = fopen_s(&inputs,"q15.txt", "rb");
+    errno_t err = fopen_s(&inputs,"test.txt", "rb");
 
-    size_t last_len;
     int pos[2] = {0,0};
     int y_size = 0;
     int x_size = 0;
 
+    int mapn = 0;
+    char* map = malloc(0);
     for (;;) {
         char buffer[1024];
         char* r = fgets(buffer, 1024, inputs);
         if (r == NULL) {
             break; 
         }
-        // printf("%s %llu %d",buffer,strlen(buffer),buffer[0]);
-        char* robot_pos = strchr(buffer, '@');
-        if (robot_pos != NULL) {
-            pos[0] = robot_pos-buffer;
-            pos[1] = y_size;
+        int n = strlen(buffer);
+        int oldmapn = mapn;
+        mapn += 2*n-1;
+        map = realloc(map,sizeof(char)*mapn);
+        for (int i = 0; i < n; i++) {
+            char cchar = buffer[i];
+            int map_index = ( i*2 )+oldmapn;
+            switch (cchar) {
+                case '#': 
+                    map[map_index] = '#';
+                    map[map_index+1] = '#';
+                    break;
+                case 'O':
+                    map[map_index] = '[';
+                    map[map_index+1] = ']';
+                    break;
+                case '.':
+                    map[map_index] = '.';
+                    map[map_index+1] = '.';
+                    break;
+                case '@':
+                    pos[0] = i*2;
+                    pos[1] = y_size;
+                    map[map_index] = '@';
+                    map[map_index+1] = '.';
+                    break;
+                case '\n':
+                    map[map_index] = '\n';
+            }
         }
-
         if (buffer[0] == '\n') {
             break; 
         }
         y_size+=1;
-        last_len = strlen(buffer);
     }
-    size_t ptr_pos = ftell(inputs)-1;
-    rewind(inputs);
-    char* map = malloc(sizeof(char)*( ptr_pos+1 ));
-    fread(map, sizeof(char), ptr_pos+1, inputs);
-    map[ptr_pos] = '\0';
-
     x_size = strchr(map, '\n')-map;
+    map = realloc(map,sizeof(char)*(mapn+1));
+    map[mapn-1] = '\0';
 
     size_t current_position = ftell(inputs);
     fseek(inputs, 0, SEEK_END);
