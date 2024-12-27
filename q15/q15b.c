@@ -6,6 +6,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+bool inArrayC(int check[2], int ( *array )[2], int n){
+    bool found = false;
+    for(size_t i = 0; i<n ;i++){
+        int* current = array[i];
+        bool xcheck = current[0] == check[0];
+        bool ycheck = current[1] == check[1];
+        if(xcheck && ycheck){
+            found = true;
+            break;
+        }
+    }
+    return found;
+}
 int main() {
     FILE *inputs;
     errno_t err = fopen_s(&inputs,"test.txt", "rb");
@@ -68,7 +82,8 @@ int main() {
     fseek(inputs, current_position, SEEK_SET);
     char* instructions = malloc(sizeof(char)*(read_count+1));
     fread(instructions,sizeof(char),read_count,inputs);
-    instructions[read_count-1] = '\0';
+    read_count--;
+    instructions[read_count] = '\0';
     // direction chr codes
     // <  60
     // v 118
@@ -105,37 +120,77 @@ int main() {
         } 
         int* direction_vec = directions[direction_index];
         int termination_index = 0;
-        int current_index = pos[1]*(x_size+1)+pos[0];
-        bool isWall = false;
-        bool last_is_box = false;
-        for (int mult = 1;;mult++) {
-            int next_pos[2]  = {pos[0]+direction_vec[0]*mult,pos[1]+direction_vec[1]*mult};
-            int next_index = next_pos[1]*(x_size+1)+next_pos[0];
-            bool wall_found = map[next_index] == '#';
-            if (wall_found || map[next_index] == '.') {
-                termination_index = next_index;
-                int previous_pos[2] = {next_pos[0]-direction_vec[0],next_pos[1]-direction_vec[1]};
-                int previous_index = previous_pos[1]*(x_size+1)+previous_pos[0];
-                last_is_box = map[previous_index] == 'O';
-                isWall = wall_found;
-                break;
+        int queue_size = 1;
+        int queue_pointer = 0;
+        int (*queue)[2] = malloc(sizeof(int[2]));
+        queue[0][0] = pos[0];
+        queue[0][1] = pos[1];
+        int foundWall = false;
+        for (;;) {
+            int current_queue_size = queue_size;
+            for (int i = queue_pointer; i < current_queue_size; i++) {
+                int* current_pos = queue[i];
+                int current_index = current_pos[1]*(x_size+1)+current_pos[0];
+                int next_pos[2] = {current_pos[0]+direction_vec[0],current_pos[1]+direction_vec[1]};
+                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+                if (map[next_index] == '.') {
+                    continue; 
+                }
+                if (map[next_index] == '#') {
+                    foundWall = true; 
+                    break;
+                }
+                bool inarray = inArrayC(next_pos, &queue[queue_pointer], queue_size-queue_pointer);
+                if (!inarray) {
+                    queue_size++;
+                    queue = realloc(queue,sizeof(int[2])*queue_size);
+                    queue[queue_size-1][0] = next_pos[0];
+                    queue[queue_size-1][1] = next_pos[1];
+                    // top down special handling for multi box push 
+                    char current_box = map[current_index];
+                    char next_box = map[next_index];
+                    if (( direction_index == 1 || direction_index == 3 ) && (next_box != current_box)) {
+                        // cur [ next ] deviation = x-1
+                        // cur ] enxt [ deviation = x+1
+                        queue_size++;
+                        queue = realloc(queue,sizeof(int[2])*queue_size);
+                        if (next_box == '[') {
+                            queue[queue_size-1][0] = next_pos[0]+1;
+                        }else if (next_box == ']') {
+                            queue[queue_size-1][0] = next_pos[0]-1;
+                        }
+                        queue[queue_size-1][1] = next_pos[1];
+                    }
+                }
+            }
+            if (foundWall) {
+                break; 
+            }
+            queue_pointer = current_queue_size;
+            if (current_queue_size == queue_size) {
+                break; 
             }
         }
-        if (!isWall) {
-            map[current_index] = '.';
-            pos[0] += direction_vec[0];
-            pos[1] += direction_vec[1];
-            current_index = pos[1]*(x_size+1)+pos[0];
-            map[current_index] = '@';
-            if (last_is_box) {
-                map[termination_index] = 'O';
-            } 
+        if (!foundWall) { //perform the moving forward of all the boxes & robot by recursing through the queue backwards
+             for (int i = queue_size-1; i >= 0; i--) {
+                int* cur_q_item = queue[i];
+                int current_index = cur_q_item[1]*(x_size+1) + cur_q_item[0];
+                int next_pos[2] = {cur_q_item[0]+direction_vec[0],cur_q_item[1]+direction_vec[1]};
+                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+                map[next_index] = map[current_index];
+                map[current_index] = '.';
+                if (map[next_index] == '@') {
+                    pos[0] = next_pos[0];
+                    pos[1] = next_pos[1];
+                }
+             }
         }
+        free(queue);
     }
     // printf("%s",map);
     int cord_sum = 0;
-    for (int i = 0; i < ptr_pos; i++) {
-        if(map[i] == 'O'){
+    for (int i = 0; i < mapn; i++) {
+        if(map[i] == '['){
             cord_sum += i/(x_size+1)*(99-x_size)+i;
         }
     }
