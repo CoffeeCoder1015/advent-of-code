@@ -84,19 +84,26 @@ int main() {
     fread(instructions,sizeof(char),read_count,inputs);
     read_count--;
     instructions[read_count] = '\0';
-    // direction chr codes
-    // <  60
-    // v 118
-    // > 62
-    // ^ 94
-
     // plan
     // for every direction command 
     // get direction vector
-    // read in data in front of robot in direction vector direction (everything in front of robot goes into a list)
-    // stop at termination chracter # or . (wall or space)
-    // if wall => continue to next direction command
-    // if space => repalce space with last thing read in before it. Replace robot with space. And if box in front of robot's old position repalce it with the robot
+    // read in data in front of robot in direction vector direction (everything in front of robot goes into a queue)
+    //
+    // stop at # and continue to next instruction abandon queue
+    // stop adding to queue when next is .
+    //
+    // if in vertical direction (^ or v) && next box != current box   handle multibox pushing
+    //      check if next is already in queue, if in skip 
+    //      if current = [ and next = ] situation is 
+    //        ->[]  
+    //           []
+    //        threfore add in the missing [ to the queue
+    //      same for other situation when current = ] and next = [
+    //
+    // finsihed reading queue segment 
+    // set queue pointer to max (length of queue)
+    // back track on queue and increment all posisiotns if no wall is found
+    // free queue
     int directions[4][2] = {{-1,0},{0,1},{1,0},{0,-1}};
     for (int i = 0; i < read_count; i++) {
         char command = instructions[i];

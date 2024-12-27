@@ -60,10 +60,10 @@ int main() {
     // plan
     // for every direction command 
     // get direction vector
-    // read in data in front of robot in direction vector direction (everything in front of robot goes into a list)
+    // read in data in front of robot in direction vector direction 
     // stop at termination chracter # or . (wall or space)
     // if wall => continue to next direction command
-    // if space => repalce space with last thing read in before it. Replace robot with space. And if box in front of robot's old position repalce it with the robot
+    // if space => move roobot forward, if last thign read in before space is a box, duplicate box to space  (same effect as pushing boxes forward and mooving the robot)
     int directions[4][2] = {{-1,0},{0,1},{1,0},{0,-1}};
     for (int i = 0; i < read_count; i++) {
         char command = instructions[i];
