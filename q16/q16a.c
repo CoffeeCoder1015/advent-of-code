@@ -156,9 +156,24 @@ int main(){
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
     int current_direction = 0;
 
-    for (;;) {
-    
-    }
+    minheap pq = new_minheap();
+    mheap_item start_item = {0,{spos[0],spos[1]}};
 
+    minheap_insert(&pq, start_item);
+    for (;pq.length > 0;) {
+        mheap_item current =  minheap_extract(&pq);
+        if (current.pos[0] == epos[0] && current.pos[1] == epos[1]) {
+            break; 
+        }
+
+        for (int i = 0; i < 4; i++) {
+            int* neighbor_vector =  directions[i];
+            int neigbor[2] = {current.pos[0]+neighbor_vector[0],current.pos[1]+neighbor_vector[1]};
+            
+            // if conditions are met:
+            mheap_item new_search_position = {1,{neigbor[0],neigbor[1]}};
+        }
+    }
+    free_minheap(&pq);
     free(buffer);
 }
