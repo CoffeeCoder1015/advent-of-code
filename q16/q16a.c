@@ -279,6 +279,25 @@ result map_get(hashmap* h, int32_t pos[2]){
     }
     return (result){false,NULL}; 
 }
+
+
+typedef struct{
+    bool isStart;
+    int pos[2];
+}path_track ;
+
+void free_path_track(map_entry* slot){
+    free(slot->value);
+}
+
+path_track* new_path_item(bool isStart,int pos[2]){
+    path_track* item = malloc(sizeof(path_track));
+    item->isStart = isStart;
+    item->pos[0] = pos[0];
+    item->pos[1] = pos[1];
+    return item;
+}
+
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs , "test.txt", "rb");
@@ -304,13 +323,19 @@ int main(){
     int epos[2] = {0,E_index/y_size};
     epos[0] = E_index - epos[1]*(x_size+1);
 
+    char* dir_glyph = ">v<^";
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
-    int current_direction = 0;
 
     minheap pq = new_minheap();
     mheap_item start_item = {0,{spos[0],spos[1]}};
-
     minheap_insert(&pq, start_item);
+
+    hashmap* distances = new_hashmap(NULL);
+    map_set(distances, spos, 0);
+
+    hashmap* came_from = new_hashmap(free_path_track);
+    map_set(came_from, spos, new_path_item(true, spos));
+
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
         if (current.pos[0] == epos[0] && current.pos[1] == epos[1]) {
@@ -320,11 +345,76 @@ int main(){
         for (int i = 0; i < 4; i++) {
             int* neighbor_vector =  directions[i];
             int neigbor[2] = {current.pos[0]+neighbor_vector[0],current.pos[1]+neighbor_vector[1]};
-            
-            // if conditions are met:
-            mheap_item new_search_position = {1,{neigbor[0],neigbor[1]}};
+            int neighbor_index = neigbor[1]*(x_size+1)+neigbor[0];
+            if (buffer[neighbor_index] == '#') {
+                continue; 
+            }
+            //new direction (just i)
+            //old direction
+            int past_dir = 0;
+            path_track pathing_direction = *(path_track*)map_get(came_from, current.pos).value;
+            if (!pathing_direction.isStart) {
+                int x_diff = current.pos[0]-pathing_direction.pos[0];
+                int y_diff = current.pos[1]-pathing_direction.pos[1];
+                int sum = x_diff+y_diff;
+                if(sum == 1){
+                    past_dir = y_diff;
+                }else {
+                    if (x_diff == -1) {
+                        past_dir = 2; 
+                    }else {
+                        past_dir = 3;
+                    }
+                }
+            }
+            // heuristic
+            int h = ( past_dir!=i )*1000;
+
+            uint64_t neighbor_distance = 1; // just grid squares for now
+            uint64_t new_distance = (uint64_t)map_get(distances, current.pos).value+neighbor_distance+h;
+            result curr_neighbor_r = map_get(distances, neigbor);
+            uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
+            if (curr_neighbor_r.found == false|| new_distance < current_neighbor_distance ) {
+                map_set(distances, neigbor, (void*)new_distance);
+                mheap_item new_search_position = {new_distance,{neigbor[0],neigbor[1]}};
+                minheap_insert(&pq, new_search_position);
+                // buffer[neighbor_index] = dir_glyph[i];
+
+                map_set(came_from, neigbor,new_path_item(false, current.pos));
+                // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
+            }
         }
     }
     free_minheap(&pq);
+
+    result end = map_get(came_from, epos);
+    if (end.found == true) {
+        path_track current_node = *(path_track*)end.value;
+        uint64_t d = (uint64_t)map_get(distances, epos).value;
+        while (!current_node.isStart) {
+            int current_index = current_node.pos[1]*(x_size+1)+current_node.pos[0];
+            path_track prev_node = *(path_track*) map_get(came_from, current_node.pos).value;
+            int x_diff = current_node.pos[0]-prev_node.pos[0];
+            int y_diff = current_node.pos[1]-prev_node.pos[1];
+            int sum = x_diff+y_diff;
+            int glyph_index;
+            if(sum == 1){
+                glyph_index = y_diff;
+            }else {
+                if (x_diff == -1) {
+                    glyph_index = 2; 
+                }else {
+                    glyph_index = 3;
+                }
+            }
+            buffer[current_index] = dir_glyph[glyph_index];
+            current_node = prev_node;
+        }
+        printf("%s %llu\n",buffer,d);
+    }
+
+
     free(buffer);
+    free_hashmap(came_from);
+    free_hashmap(distances);
 }
