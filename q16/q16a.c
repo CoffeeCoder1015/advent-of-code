@@ -433,6 +433,7 @@ int main(){
     }
     free_minheap(&pq);
 
+    bool set = false;
     uint64_t current_distance;
     path_track current_node = {};
     for (int dir = 0 ; dir < 4; dir++) {
@@ -442,13 +443,14 @@ int main(){
         if (end.found == true) {
             path_track loop_node = *(path_track*)end.value;
             uint64_t d = (uint64_t)map_get(distances, dist_end_key).value;
-            if (d < current_distance || dir == 0) {
+            if (d <= current_distance || !set ) {
                 current_distance = d;
-                printf("%llu\n",d);
                 current_node = loop_node;
+                set = true;
             }
         }
     }
+    printf("%llu\n", current_distance);
     while (!current_node.isStart) {
         int current_index = current_node.pos[1] * (x_size + 1) + current_node.pos[0];
         path_track prev_node = *(path_track *)map_get(came_from, pos_to_key(current_node.dir, current_node.pos)).value;
