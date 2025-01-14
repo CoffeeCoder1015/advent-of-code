@@ -1,10 +1,13 @@
 #include <corecrt.h>
+#include <math.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 // referncing https://web.stanford.edu/class/archive/cs/cs161/cs161.1168/lecture4.pdf
 // implementing heap insertion, heap deletion 
@@ -14,7 +17,8 @@
 //
 
 typedef struct{
-    int potential;
+    uint64_t potential;
+    int dir_index;
     int pos[2];
 } mheap_item;
 
@@ -25,24 +29,28 @@ typedef struct{
 
 void check_heap(minheap* mh){
     int length = mh->length;
+    if (length == 0) {
+        printf("Nothing is here\n");
+        return;
+    }
     bool good = true;
     for (int i = 0;i < length; i++) {
         mheap_item current_node = mh->heap[i];
-        int current_potential = current_node.potential;
-        int child1_index = 2*i;
+        uint64_t current_potential = current_node.potential;
+        int child1_index = 2*i+1;
         int child2_index = child1_index+1;
         if (child1_index < length) {
-            int child_potential = mh->heap[child1_index].potential;
+            uint64_t child_potential = mh->heap[child1_index].potential;
             if (current_potential > child_potential) {
                 good = false ;
-                printf("Failed at node [%d]: Parent=%d Child1=%d\n",i,current_potential,child_potential);
+                printf("Failed at node [%d]: Parent=%llu Child1=%llu\n",i,current_potential,child_potential);
             } 
         }
         if (child2_index < length) {
-            int child_potential = mh->heap[child2_index].potential;
+            uint64_t child_potential = mh->heap[child2_index].potential;
             if (current_potential > child_potential) {
                 good = false ;
-                printf("Failed at node [%d]: Parent=%d Child2=%d\n",i,current_potential,child_potential);
+                printf("Failed at node [%d]: Parent=%llu Child2=%llu\n",i,current_potential,child_potential);
             } 
         }
     }
@@ -78,13 +86,14 @@ void minheap_insert(minheap* mh, mheap_item item){
     // reorder heap
     for (int i = length-1; i > 0; i = (i-1)/2) {
         mheap_item current = mh->heap[i];
-        mheap_item parent = mh->heap[i/2];
+        mheap_item parent = mh->heap[(i-1)/2];
         if (parent.potential > current.potential) {
-            minheap_swap_index(mh,i , i/2);
+            minheap_swap_index(mh,i , (i-1)/2);
         }else {
             break;
         }
     }
+    // check_heap(mh);
 }
 
 void minheap_heapify(minheap* mh, int index){
@@ -95,18 +104,19 @@ void minheap_heapify(minheap* mh, int index){
     int start_index = index;
     for (;;) {
         int left_index = 2*start_index+1;
-        int right_index = left_index+2;
+        int right_index = 2*start_index+2;
 
         int smallest_index = start_index;
-        if (left_index < length && mh->heap[left_index].potential < mh->heap[smallest_index].potential) {
+        bool has_space_left = left_index < length;
+        bool has_space_right = right_index < length;
+        if (has_space_left && mh->heap[left_index].potential < mh->heap[start_index].potential) {
             smallest_index = left_index; 
         }
-
-        if (right_index < length &&  mh->heap[right_index].potential < mh->heap[smallest_index].potential ) {
+        if (has_space_right && mh->heap[right_index].potential < mh->heap[smallest_index].potential) {
             smallest_index = right_index; 
         }
         if (smallest_index != start_index) {
-            minheap_swap_index(mh,start_index,smallest_index);
+            minheap_swap_index(mh, start_index, smallest_index);
             start_index = smallest_index;
         }else {
             break;
@@ -114,8 +124,11 @@ void minheap_heapify(minheap* mh, int index){
     }
 }
 
-void minheap_delte(minheap* mh){
+void minheap_delete(minheap* mh){
     int length = mh->length;
+    if (length == 0) {
+        return; 
+    }
     mheap_item last = mh->heap[length-1];
     mh->heap[0] = last;
     mh->length--;
@@ -125,10 +138,9 @@ void minheap_delte(minheap* mh){
 
 mheap_item minheap_extract(minheap* mh){
     mheap_item item = mh->heap[0];
-    minheap_delte(mh);
+    minheap_delete(mh);
     return item;
 }
-
 
 typedef struct{
     uint64_t key;
@@ -298,9 +310,21 @@ path_track* new_path_item(bool isStart,int pos[2]){
     return item;
 }
 
+typedef struct{
+    uint64_t distance;
+    int dir_of_distance;
+} distance_dir;
+
+int modulo(int x, int y){
+    //why does the C modulo operator seem to only work on positive numbers, I will never know. . . .
+
+    int div = x/y;
+    return x-div*y;
+}
+
 int main(){
     FILE* inputs;
-    errno_t err = fopen_s(&inputs , "test.txt", "rb");
+    errno_t err = fopen_s(&inputs , "q16.txt", "rb");
     fseek(inputs, 0, SEEK_END);
     size_t read_count = ftell(inputs);
     rewind(inputs);
@@ -327,94 +351,104 @@ int main(){
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
 
     minheap pq = new_minheap();
-    mheap_item start_item = {0,{spos[0],spos[1]}};
+    mheap_item start_item = {0,0,{spos[0],spos[1]}};
     minheap_insert(&pq, start_item);
 
-    hashmap* distances = new_hashmap(NULL);
-    map_set(distances, spos, 0);
+    // hashmap* distances = new_hashmap(NULL);
+    // map_set(distances, spos, 0);
 
-    hashmap* came_from = new_hashmap(free_path_track);
-    map_set(came_from, spos, new_path_item(true, spos));
+    // hashmap* came_from = new_hashmap(free_path_track);
+    // map_set(came_from, spos, new_path_item(true, spos));
+    uint64_t minDistance[x_size][y_size][4];
+    memset(minDistance, 1, sizeof(uint64_t)*x_size*y_size*4);
+    minDistance[spos[0]][spos[1]][0] = 0;
 
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
         if (current.pos[0] == epos[0] && current.pos[1] == epos[1]) {
+            // printf("p:%llu ( %d,%d ) %d\n",current.potential,current.pos[0],current.pos[1],pq.length);
             break; 
         }
 
+        //old direction
+        int current_dir = current.dir_index;
+        int possible_dir_index[3] = {current_dir,current_dir+1,current_dir-1};
         for (int i = 0; i < 4; i++) {
-            int* neighbor_vector =  directions[i];
+            // int dir_index = modulo(possible_dir_index[i], 4);
+            int dir_index = i;
+            int *neighbor_vector =  directions[dir_index];
             int neigbor[2] = {current.pos[0]+neighbor_vector[0],current.pos[1]+neighbor_vector[1]};
             int neighbor_index = neigbor[1]*(x_size+1)+neigbor[0];
             if (buffer[neighbor_index] == '#') {
                 continue; 
             }
             //new direction (just i)
-            //old direction
-            int past_dir = 0;
-            path_track pathing_direction = *(path_track*)map_get(came_from, current.pos).value;
-            if (!pathing_direction.isStart) {
-                int x_diff = current.pos[0]-pathing_direction.pos[0];
-                int y_diff = current.pos[1]-pathing_direction.pos[1];
-                int sum = x_diff+y_diff;
-                if(sum == 1){
-                    past_dir = y_diff;
-                }else {
-                    if (x_diff == -1) {
-                        past_dir = 2; 
-                    }else {
-                        past_dir = 3;
-                    }
-                }
-            }
             // heuristic
-            int h = ( past_dir!=i )*1000;
+            int h = ( current_dir != dir_index )*1000;
 
             uint64_t neighbor_distance = 1; // just grid squares for now
-            uint64_t new_distance = (uint64_t)map_get(distances, current.pos).value+neighbor_distance+h;
-            result curr_neighbor_r = map_get(distances, neigbor);
-            uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
-            if (curr_neighbor_r.found == false|| new_distance < current_neighbor_distance ) {
-                map_set(distances, neigbor, (void*)new_distance);
-                mheap_item new_search_position = {new_distance,{neigbor[0],neigbor[1]}};
-                minheap_insert(&pq, new_search_position);
-                // buffer[neighbor_index] = dir_glyph[i];
+            // uint64_t new_distance = (uint64_t)map_get(distances, current.pos).value+neighbor_distance+h;
+            // result curr_neighbor_r = map_get(distances, neigbor);
+            // uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
+            // if (curr_neighbor_r.found == false|| new_distance < current_neighbor_distance ) {
+            //     mheap_item new_search_position = {new_distance,dir_index,{neigbor[0],neigbor[1]}};
+            //     minheap_insert(&pq, new_search_position);
+            //     map_set(distances, neigbor, (void*)new_distance);
+            //     // buffer[neighbor_index] = 'O';
+            //     map_set(came_from, neigbor,new_path_item(false, current.pos));
+            //     // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
+            // }
 
-                map_set(came_from, neigbor,new_path_item(false, current.pos));
-                // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
+            uint64_t cur_neighbor_dist = minDistance[neigbor[0]][neigbor[1]][dir_index];
+            uint64_t cur_distance = minDistance[current.pos[0]][current.pos[1]][current_dir];
+            // uint64_t distance_to_goal = distance(neigbor, current.pos);
+            uint64_t new_distance = cur_distance + neighbor_distance + h;
+            if (new_distance < cur_neighbor_dist) {
+                // printf("%llu\n",new_distance);
+                minDistance[neigbor[0]][neigbor[1]][dir_index] = new_distance;
+                mheap_item new_search_position = {new_distance,dir_index,{neigbor[0],neigbor[1]}};
+                minheap_insert(&pq, new_search_position);
+                // buffer[neighbor_index] = 'O';
             }
+
         }
     }
     free_minheap(&pq);
+    printf("%llu\n",minDistance[epos[0]][epos[1]][3]);
+    printf("%llu\n",minDistance[15][29][3]);
 
-    result end = map_get(came_from, epos);
-    if (end.found == true) {
-        path_track current_node = *(path_track*)end.value;
-        uint64_t d = (uint64_t)map_get(distances, epos).value;
-        while (!current_node.isStart) {
-            int current_index = current_node.pos[1]*(x_size+1)+current_node.pos[0];
-            path_track prev_node = *(path_track*) map_get(came_from, current_node.pos).value;
-            int x_diff = current_node.pos[0]-prev_node.pos[0];
-            int y_diff = current_node.pos[1]-prev_node.pos[1];
-            int sum = x_diff+y_diff;
-            int glyph_index;
-            if(sum == 1){
-                glyph_index = y_diff;
-            }else {
-                if (x_diff == -1) {
-                    glyph_index = 2; 
-                }else {
-                    glyph_index = 3;
-                }
-            }
-            buffer[current_index] = dir_glyph[glyph_index];
-            current_node = prev_node;
-        }
-        printf("%s %llu\n",buffer,d);
-    }
+    // result end = map_get(came_from, epos);
+    // if (end.found == true) {
+    //     path_track current_node = *(path_track*)end.value;
+    //     // uint64_t d = (uint64_t)map_get(distances, epos).value;
+    //     // printf("%d,%d: %llu\n",epos[0],epos[1],d);
+    //     while (!current_node.isStart) {
+    //         // uint64_t dpast = (uint64_t)map_get(distances, current_node.pos).value;
+    //     // printf("%d,%d: %llu\n",current_node.pos[0],current_node.pos[1],dpast);
+    //         int current_index = current_node.pos[1]*(x_size+1)+current_node.pos[0];
+    //         path_track prev_node = *(path_track*) map_get(came_from, current_node.pos).value;
+    //         int x_diff = current_node.pos[0]-prev_node.pos[0];
+    //         int y_diff = current_node.pos[1]-prev_node.pos[1];
+    //         int sum = x_diff+y_diff;
+    //         int glyph_index;
+    //         if(sum == 1){
+    //             glyph_index = y_diff;
+    //         }else {
+    //             if (x_diff == -1) {
+    //                 glyph_index = 2; 
+    //             }else {
+    //                 glyph_index = 3;
+    //             }
+    //         }
+    //         buffer[current_index] = dir_glyph[glyph_index];
+    //         current_node = prev_node;
+    //     }
+        // printf("%s\n",buffer);
+    //     // printf("%llu\n",d);
+    // }
 
 
     free(buffer);
-    free_hashmap(came_from);
-    free_hashmap(distances);
+    // free_hashmap(came_from);
+    // free_hashmap(distances);
 }
