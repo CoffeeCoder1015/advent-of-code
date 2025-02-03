@@ -331,6 +331,7 @@ result map_get(hashmap* h,Key key){
 
 typedef struct{
     bool isStart;
+    int dir;
     int pos[2];
 }path_track ;
 
@@ -338,9 +339,10 @@ void free_path_track(map_entry* slot){
     free(slot->value);
 }
 
-path_track* new_path_item(bool isStart,int pos[2]){
+path_track* new_path_item(bool isStart,int dir,int pos[2]){
     path_track* item = malloc(sizeof(path_track));
     item->isStart = isStart;
+    item->dir = dir;
     item->pos[0] = pos[0];
     item->pos[1] = pos[1];
     return item;
