@@ -286,15 +286,14 @@ bool map_expand(hashmap* h){
     return true;
 }
 
-key* map_set(hashmap* h, int32_t pos[2], void* value){
+Key* map_set(hashmap* h, Key key, void* value){
     if (h->length >= h->capacity / 2) {
         if (!map_expand(h)) {
             return NULL;
         }
     }
-    key k_temp = {};
-    pos_to_key(&k_temp,pos);
-    key* result = map_set_entry(h->entries,h->capacity,&h->length,k_temp,value);
+
+    Key* result = map_set_entry(h->entries,h->capacity,&h->length,key,value);
     return result;
 
 }
@@ -304,10 +303,8 @@ typedef struct{
     void* value;
 } result;
 
-result map_get(hashmap* h, int32_t pos[2]){
-    key key_temp = {};
-    pos_to_key(&key_temp,pos);
-    uint64_t hash = hash_key(key_temp);
+result map_get(hashmap* h,Key key){
+    uint64_t hash = hash_key(key);
     size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
     map_slot hashed_slot = h->entries[index];
     if (hashed_slot.length == 0) {
@@ -316,7 +313,7 @@ result map_get(hashmap* h, int32_t pos[2]){
 
     for (size_t i = 0; i < hashed_slot.length; i++) {
         map_entry current_entry = hashed_slot.kv_paris[i];
-        if (compare_key(current_entry.key, key_temp)) {
+        if (compare_key(current_entry.key, key)) {
             return (result){true,current_entry.value}; 
         }
     }
