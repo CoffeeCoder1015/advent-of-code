@@ -392,11 +392,12 @@ int main(){
     mheap_item start_item = {0,0,{spos[0],spos[1]}};
     minheap_insert(&pq, start_item);
 
-    // hashmap* distances = new_hashmap(NULL);
-    // map_set(distances, spos, 0);
+    hashmap* distances = new_hashmap(NULL);
+    Key start_key = pos_to_key(0, spos);
+    map_set(distances, start_key, 0);
 
-    // hashmap* came_from = new_hashmap(free_path_track);
-    // map_set(came_from, spos, new_path_item(true, spos));
+    hashmap* came_from = new_hashmap(free_path_track);
+    map_set(came_from, start_key, new_path_item(true, 0,spos));
 
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
@@ -469,6 +470,6 @@ int main(){
 
 
     free(buffer);
-    // free_hashmap(came_from);
-    // free_hashmap(distances);
+    free_hashmap(came_from);
+    free_hashmap(distances);
 }
