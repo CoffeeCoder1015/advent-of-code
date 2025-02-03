@@ -391,9 +391,6 @@ int main(){
 
     // hashmap* came_from = new_hashmap(free_path_track);
     // map_set(came_from, spos, new_path_item(true, spos));
-    uint64_t minDistance[x_size][y_size][4];
-    memset(minDistance, 1, sizeof(uint64_t)*x_size*y_size*4);
-    minDistance[spos[0]][spos[1]][0] = 0;
 
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
@@ -430,24 +427,9 @@ int main(){
             //     map_set(came_from, neigbor,new_path_item(false, current.pos));
             //     // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
             // }
-
-            uint64_t cur_neighbor_dist = minDistance[neigbor[0]][neigbor[1]][dir_index];
-            uint64_t cur_distance = minDistance[current.pos[0]][current.pos[1]][current_dir];
-            // uint64_t distance_to_goal = distance(neigbor, current.pos);
-            uint64_t new_distance = cur_distance + neighbor_distance + h;
-            if (new_distance < cur_neighbor_dist) {
-                // printf("%llu\n",new_distance);
-                minDistance[neigbor[0]][neigbor[1]][dir_index] = new_distance;
-                mheap_item new_search_position = {new_distance,dir_index,{neigbor[0],neigbor[1]}};
-                minheap_insert(&pq, new_search_position);
-                // buffer[neighbor_index] = 'O';
-            }
-
         }
     }
     free_minheap(&pq);
-    printf("%llu\n",minDistance[epos[0]][epos[1]][3]);
-    printf("%llu\n",minDistance[15][29][3]);
 
     // result end = map_get(came_from, epos);
     // if (end.found == true) {
