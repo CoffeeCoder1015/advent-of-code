@@ -423,17 +423,17 @@ int main(){
             int h = ( current_dir != dir_index )*1000;
 
             uint64_t neighbor_distance = 1; // just grid squares for now
-            // uint64_t new_distance = (uint64_t)map_get(distances, current.pos).value+neighbor_distance+h;
-            // result curr_neighbor_r = map_get(distances, neigbor);
-            // uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
-            // if (curr_neighbor_r.found == false|| new_distance < current_neighbor_distance ) {
-            //     mheap_item new_search_position = {new_distance,dir_index,{neigbor[0],neigbor[1]}};
-            //     minheap_insert(&pq, new_search_position);
-            //     map_set(distances, neigbor, (void*)new_distance);
-            //     // buffer[neighbor_index] = 'O';
-            //     map_set(came_from, neigbor,new_path_item(false, current.pos));
-            //     // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
-            // }
+            uint64_t new_distance = (uint64_t)map_get(distances, pos_to_key(current_dir, current.pos)).value+neighbor_distance+h;
+            result curr_neighbor_r = map_get(distances, pos_to_key(dir_index, neigbor));
+            uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
+            if (curr_neighbor_r.found == false|| new_distance < current_neighbor_distance ) {
+                mheap_item new_search_position = {new_distance,dir_index,{neigbor[0],neigbor[1]}};
+                minheap_insert(&pq, new_search_position);
+                map_set(distances, pos_to_key(dir_index, neigbor), (void*)new_distance);
+                // buffer[neighbor_index] = 'O';
+                map_set(came_from, pos_to_key(dir_index, neigbor),new_path_item(false, current_dir,current.pos));
+                // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
+            }
         }
     }
     free_minheap(&pq);
