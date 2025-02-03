@@ -192,6 +192,26 @@ void free_hashmap(hashmap* h){
     free(h);
 }
 
+bool compare_key(key key1, key key2){
+    if (key1.len != key2.len) {
+        return false;
+    }
+    for (int i = 0; i < key1.len; i++) {
+        if (key1.id[i]!=key2.id[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+//use only stack allocated key objects
+//do not use on key* from a malloc
+//not for general use
+void init_empty_key(key* key_ptr,int len){
+   key_ptr->id =  malloc(sizeof(int8_t)*len);
+    key_ptr->len = len;
+}
+
 #define FNV_OFFSET 14695981039346656037UL
 #define FNV_PRIME 1099511628211UL
 static uint64_t hash_key(uint64_t key) {
