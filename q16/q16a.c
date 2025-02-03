@@ -454,29 +454,25 @@ int main(){
         }
     }
     while (!current_node.isStart) {
-        int current_index = current_node.pos[1]*(x_size+1)+current_node.pos[0];
-    //         path_track prev_node = *(path_track*) map_get(came_from, current_node.pos).value;
-    //         int x_diff = current_node.pos[0]-prev_node.pos[0];
-    //         int y_diff = current_node.pos[1]-prev_node.pos[1];
-    //         int sum = x_diff+y_diff;
-    //         int glyph_index;
-    //         if(sum == 1){
-    //             glyph_index = y_diff;
-    //         }else {
-    //             if (x_diff == -1) {
-    //                 glyph_index = 2; 
-    //             }else {
-    //                 glyph_index = 3;
-    //             }
-    //         }
-    //         buffer[current_index] = dir_glyph[glyph_index];
-    //         current_node = prev_node;
-    //     }
-        // printf("%s\n",buffer);
-    //     // printf("%llu\n",d);
-    // }
-
-
+        int current_index = current_node.pos[1] * (x_size + 1) + current_node.pos[0];
+        path_track prev_node = *(path_track *)map_get(came_from, pos_to_key(current_node.dir, current_node.pos)).value;
+        int x_diff = current_node.pos[0] - prev_node.pos[0];
+        int y_diff = current_node.pos[1] - prev_node.pos[1];
+        int sum = x_diff + y_diff;
+        int glyph_index;
+        if (sum == 1) {
+            glyph_index = y_diff;
+        } else {
+            if (x_diff == -1) {
+                glyph_index = 2;
+            } else {
+                glyph_index = 3;
+            }
+        }
+        buffer[current_index] = dir_glyph[glyph_index];
+        current_node = prev_node;
+    }
+    printf("%s\n", buffer);
     free(buffer);
     free_hashmap(came_from);
     free_hashmap(distances);
