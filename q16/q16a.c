@@ -204,12 +204,9 @@ bool compare_key(Key key1, Key key2){
     return true;
 }
 
-//use only stack allocated key objects
-//do not use on key* from a malloc
-//not for general use
-void init_empty_key(key* key_ptr,int len){
-   key_ptr->id =  malloc(sizeof(int8_t)*len);
-    key_ptr->len = len;
+Key new_key(int len){
+    Key k = { len, malloc(sizeof(int8_t)*len) };
+    return k;
 }
 
 #define FNV_OFFSET 14695981039346656037UL
