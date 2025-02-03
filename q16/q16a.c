@@ -145,10 +145,10 @@ mheap_item minheap_extract(minheap* mh){
 typedef struct{
     int len;
     int8_t* id;
-} key;
+} Key;
 
 typedef struct{
-    key key;
+    Key key;
     void* value;
 } map_entry;
 
@@ -192,7 +192,7 @@ void free_hashmap(hashmap* h){
     free(h);
 }
 
-bool compare_key(key key1, key key2){
+bool compare_key(Key key1, Key key2){
     if (key1.len != key2.len) {
         return false;
     }
@@ -214,7 +214,7 @@ void init_empty_key(key* key_ptr,int len){
 
 #define FNV_OFFSET 14695981039346656037UL
 #define FNV_PRIME 1099511628211UL
-static uint64_t hash_key(key key) {
+static uint64_t hash_key(Key key) {
     uint64_t hash = FNV_OFFSET;
     for (int i= 0; i < key.len; i++) {
         uint8_t byte_of_data = key.id[i];
@@ -235,7 +235,7 @@ void pos_to_key(key* key,int32_t pos[2]){
     }
 }
 
-key* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, key key, void* value) {
+Key* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, Key key, void* value) {
     uint64_t hash = hash_key(key);
     size_t index = (size_t)(hash & (uint64_t)(capacity - 1));
 
