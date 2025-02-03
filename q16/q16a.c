@@ -438,15 +438,23 @@ int main(){
     }
     free_minheap(&pq);
 
-    // result end = map_get(came_from, epos);
-    // if (end.found == true) {
-    //     path_track current_node = *(path_track*)end.value;
-    //     // uint64_t d = (uint64_t)map_get(distances, epos).value;
-    //     // printf("%d,%d: %llu\n",epos[0],epos[1],d);
-    //     while (!current_node.isStart) {
-    //         // uint64_t dpast = (uint64_t)map_get(distances, current_node.pos).value;
-    //     // printf("%d,%d: %llu\n",current_node.pos[0],current_node.pos[1],dpast);
-    //         int current_index = current_node.pos[1]*(x_size+1)+current_node.pos[0];
+    uint64_t current_distance;
+    path_track current_node = {};
+    for (int dir = 0 ; dir < 4; dir++) {
+        Key end_key =pos_to_key(dir, epos);
+        result end = map_get(came_from,end_key );
+        if (end.found == true) {
+            path_track loop_node = *(path_track*)end.value;
+            uint64_t d = (uint64_t)map_get(distances, end_key).value;
+            if (d < current_distance || dir == 0) {
+                current_distance = d;
+                printf("%llu\n",d);
+                current_node = loop_node;
+            }
+        }
+    }
+    while (!current_node.isStart) {
+        int current_index = current_node.pos[1]*(x_size+1)+current_node.pos[0];
     //         path_track prev_node = *(path_track*) map_get(came_from, current_node.pos).value;
     //         int x_diff = current_node.pos[0]-prev_node.pos[0];
     //         int y_diff = current_node.pos[1]-prev_node.pos[1];
