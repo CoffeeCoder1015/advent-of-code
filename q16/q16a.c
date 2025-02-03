@@ -143,7 +143,12 @@ mheap_item minheap_extract(minheap* mh){
 }
 
 typedef struct{
-    uint64_t key;
+    int len;
+    int8_t* id;
+} key;
+
+typedef struct{
+    key key;
     void* value;
 } map_entry;
 
