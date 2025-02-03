@@ -235,13 +235,13 @@ void pos_to_key(key* key,int32_t pos[2]){
     }
 }
 
-key* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, uint64_t key, void* value) {
+key* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, key key, void* value) {
     uint64_t hash = hash_key(key);
     size_t index = (size_t)(hash & (uint64_t)(capacity - 1));
 
     for (size_t i = 0; i < entries[index].length; i++) {
         map_entry* current_entry = &entries[index].kv_paris[i];
-        if (current_entry->key == key) {
+        if (compare_key(current_entry->key, key)) {
             //update value
             current_entry->value = value;
             return &current_entry->key;
@@ -287,14 +287,15 @@ bool map_expand(hashmap* h){
     return true;
 }
 
-uint64_t* map_set(hashmap* h, int32_t pos[2], void* value){
+key* map_set(hashmap* h, int32_t pos[2], void* value){
     if (h->length >= h->capacity / 2) {
         if (!map_expand(h)) {
             return NULL;
         }
     }
-    uint64_t key = pos_to_key(pos);
-    uint64_t* result = map_set_entry(h->entries,h->capacity,&h->length,key,value);
+    key k_temp = {};
+    pos_to_key(&k_temp,pos);
+    key* result = map_set_entry(h->entries,h->capacity,&h->length,k_temp,value);
     return result;
 
 }
@@ -305,8 +306,9 @@ typedef struct{
 } result;
 
 result map_get(hashmap* h, int32_t pos[2]){
-    uint64_t key = pos_to_key(pos);
-    uint64_t hash = hash_key(key);
+    key key_temp = {};
+    pos_to_key(&key_temp,pos);
+    uint64_t hash = hash_key(key_temp);
     size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
     map_slot hashed_slot = h->entries[index];
     if (hashed_slot.length == 0) {
@@ -315,7 +317,7 @@ result map_get(hashmap* h, int32_t pos[2]){
 
     for (size_t i = 0; i < hashed_slot.length; i++) {
         map_entry current_entry = hashed_slot.kv_paris[i];
-        if (current_entry.key == key) {
+        if (compare_key(current_entry.key, key_temp)) {
             return (result){true,current_entry.value}; 
         }
     }
