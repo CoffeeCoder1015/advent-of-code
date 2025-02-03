@@ -214,23 +214,28 @@ void init_empty_key(key* key_ptr,int len){
 
 #define FNV_OFFSET 14695981039346656037UL
 #define FNV_PRIME 1099511628211UL
-static uint64_t hash_key(uint64_t key) {
+static uint64_t hash_key(key key) {
     uint64_t hash = FNV_OFFSET;
-    for (int byte_offset= 0; byte_offset < 8; byte_offset++) {
-        uint8_t byte_of_data = ( key >> (byte_offset * 8) ) & 255;
+    for (int i= 0; i < key.len; i++) {
+        uint8_t byte_of_data = key.id[i];
         hash *= FNV_PRIME;
         hash ^= byte_of_data;
     }
     return hash;
 }
 
-uint64_t pos_to_key(int32_t pos[2]){
-    uint64_t key = (uint64_t)pos[0] << 32;
-    key |= pos[1];
-    return key;
+void pos_to_key(key* key,int32_t pos[2]){
+    init_empty_key(key, 8);
+
+    uint64_t combined = (uint64_t)pos[0] << 32;
+    combined |= pos[1];
+    for (int i = 0;  i < 8; i++) {
+        uint8_t byte_of_data = ( combined >> (i * 8) ) & 255;
+        key->id[i] = byte_of_data;
+    }
 }
 
-uint64_t* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, uint64_t key, void* value) {
+key* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, uint64_t key, void* value) {
     uint64_t hash = hash_key(key);
     size_t index = (size_t)(hash & (uint64_t)(capacity - 1));
 
