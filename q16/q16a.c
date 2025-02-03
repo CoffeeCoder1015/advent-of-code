@@ -166,6 +166,11 @@ typedef struct{
     void (*free_entry)(map_entry*);
 } hashmap;
 
+//frees the internal array of the key of the Key
+void free_key(Key* key){
+    free(key->id);
+}
+
 #define INIT_CAPACITY 6400
 hashmap* new_hashmap(void (*free_function)(map_entry*)){
     hashmap* h = malloc(sizeof(hashmap));
@@ -184,6 +189,9 @@ void free_hashmap(hashmap* h){
                 for (size_t j = 0; j < h->entries[i].length; j++) {
                     h->free_entry(&h->entries[i].kv_paris[j]);
                 }
+            }
+            for (size_t j = 0; j < h->entries[i].length; j++) {
+                free_key(&h->entries[i].kv_paris[j].key);
             }
             free(h->entries[i].kv_paris);
         }
