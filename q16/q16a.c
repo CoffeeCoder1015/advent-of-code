@@ -221,15 +221,17 @@ static uint64_t hash_key(Key key) {
     return hash;
 }
 
-void pos_to_key(key* key,int32_t pos[2]){
-    init_empty_key(key, 8);
+Key pos_to_key(int dir, int32_t pos[2]){
+    Key k = new_key(9);
 
     uint64_t combined = (uint64_t)pos[0] << 32;
     combined |= pos[1];
     for (int i = 0;  i < 8; i++) {
         uint8_t byte_of_data = ( combined >> (i * 8) ) & 255;
-        key->id[i] = byte_of_data;
+        k.id[i] = byte_of_data;
     }
+    k.id[8] = dir;
+    return k;
 }
 
 Key* map_set_entry(map_slot* entries, size_t capacity, size_t* plength, Key key, void* value) {
