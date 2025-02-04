@@ -482,20 +482,20 @@ int main(){
     free_minheap(&pq);
 
     bool set = false;
-    uint64_t current_distance;
+    uint64_t target_dist;
     for (int dir = 0 ; dir < 4; dir++) {
         Key dist_end_key =pos_to_key(dir, epos);
         result end = map_get(distances,dist_end_key );
         if (end.found == true) {
             uint64_t d = (uint64_t)end.value;
-            if (d <= current_distance || !set ) {
-                current_distance = d;
+            if (d <= target_dist || !set ) {
+                target_dist = d;
                 set = true;
             }
         }
     }
-    printf("%llu\n", current_distance);
-    while (!current_node.isStart) {
+    printf("%llu\n", target_dist);
+/*     while (!current_node.isStart) {
         int current_index = current_node.pos[1] * (x_size + 1) + current_node.pos[0];
         path_track prev_node = *(path_track *)map_get(came_from, pos_to_key(current_node.dir, current_node.pos)).value;
         int x_diff = current_node.pos[0] - prev_node.pos[0];
@@ -513,7 +513,7 @@ int main(){
         }
         buffer[current_index] = dir_glyph[glyph_index];
         current_node = prev_node;
-    }
+    } */
     printf("%s\n", buffer);
     free(buffer);
     free_hashmap(came_from);
