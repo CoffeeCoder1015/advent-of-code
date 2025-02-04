@@ -345,25 +345,29 @@ typedef struct{
     path_track* paths;
 } multiPath;
 
-multiPath new_mp(){
-    multiPath mp = {1,malloc(sizeof(path_track))};
+multiPath* new_mp(){
+    multiPath* mp = malloc(sizeof(multiPath));
+    mp->length = 1;
+    mp->paths = malloc(sizeof(path_track));
     return mp;
 }
 
-void free_mp(multiPath mp){
-    free(mp.paths);
+void free_mp(map_entry* slot){
+    multiPath v = *(multiPath*)slot->value;
+    free(v.paths);
+    free(slot->value);
 }
 
-void append_path(multiPath mp,path_track path){
-    mp.length++;
-    mp.paths = realloc(mp.paths,  sizeof(path_track)*mp.length);
-    mp.paths[mp.length-1] = path;
+void append_path(multiPath* mp,path_track path){
+    mp->length++;
+    mp->paths = realloc(mp->paths,  sizeof(path_track)*mp->length);
+    mp->paths[mp->length-1] = path;
 }
 
-void better_path(multiPath mp, path_track path){
-    mp.length = 1;
-    mp.paths = realloc(mp.paths,  sizeof(path_track)*mp.length);
-    mp.paths[mp.length-1] = path;
+void better_path(multiPath* mp, path_track path){
+    mp->length = 1;
+    mp->paths = realloc(mp->paths,  sizeof(path_track)*mp->length);
+    mp->paths[mp->length-1] = path;
 }
 
 typedef struct{
