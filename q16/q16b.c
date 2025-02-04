@@ -312,12 +312,14 @@ result map_get(hashmap* h,Key key){
     size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
     map_slot hashed_slot = h->entries[index];
     if (hashed_slot.length == 0) {
+        free(key.id);
         return (result){false,NULL}; 
     }
 
     for (size_t i = 0; i < hashed_slot.length; i++) {
         map_entry current_entry = hashed_slot.kv_paris[i];
         if (compare_key(current_entry.key, key)) {
+            free(key.id);
             return (result){true,current_entry.value}; 
         }
     }
