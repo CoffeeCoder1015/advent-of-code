@@ -483,17 +483,13 @@ int main(){
 
     bool set = false;
     uint64_t current_distance;
-    path_track current_node = {};
     for (int dir = 0 ; dir < 4; dir++) {
-        Key came_from_end_key =pos_to_key(dir, epos);
         Key dist_end_key =pos_to_key(dir, epos);
-        result end = map_get(came_from,came_from_end_key );
+        result end = map_get(distances,dist_end_key );
         if (end.found == true) {
-            path_track loop_node = *(path_track*)end.value;
-            uint64_t d = (uint64_t)map_get(distances, dist_end_key).value;
+            uint64_t d = (uint64_t)end.value;
             if (d <= current_distance || !set ) {
                 current_distance = d;
-                current_node = loop_node;
                 set = true;
             }
         }
