@@ -486,8 +486,7 @@ int main(){
     bool set = false;
     uint64_t target_dist;
     for (int dir = 0 ; dir < 4; dir++) {
-        Key dist_end_key =pos_to_key(dir, epos);
-        result end = map_get(distances,dist_end_key );
+        result end = map_get(distances,pos_to_key(dir, epos));
         if (end.found == true) {
             uint64_t d = (uint64_t)end.value;
             if (d <= target_dist || !set ) {
