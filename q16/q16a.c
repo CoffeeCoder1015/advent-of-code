@@ -352,8 +352,11 @@ typedef struct{
 int modulo(int x, int y){
     //why does the C modulo operator seem to only work on positive numbers, I will never know. . . .
 
-    int div = x/y;
-    return x-div*y;
+    double d_x = x;
+    double d_y = y;
+    double div = floor(d_x/d_y);
+    double mod = d_x-div*d_y;
+    return mod;
 }
 
 int main(){
@@ -404,9 +407,9 @@ int main(){
         //old direction
         int current_dir = current.dir_index;
         int possible_dir_index[3] = {current_dir,current_dir+1,current_dir-1};
-        for (int i = 0; i < 4; i++) {
-            // int dir_index = modulo(possible_dir_index[i], 4);
-            int dir_index = i;
+        for (int i = 0; i < 3; i++) {
+            int dir_index = modulo(possible_dir_index[i], 4);
+            // int dir_index = i;
             int *neighbor_vector =  directions[dir_index];
             int neigbor[2] = {current.pos[0]+neighbor_vector[0],current.pos[1]+neighbor_vector[1]};
             int neighbor_index = neigbor[1]*(x_size+1)+neigbor[0];
