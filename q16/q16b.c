@@ -439,8 +439,8 @@ int main(){
             int dir_index = modulo(possible_dir_index[i], 4);
             // int dir_index = i;
             int *neighbor_vector =  directions[dir_index];
-            int neigbor[2] = {current.pos[0]+neighbor_vector[0],current.pos[1]+neighbor_vector[1]};
-            int neighbor_index = neigbor[1]*(x_size+1)+neigbor[0];
+            int neighbor[2] = {current.pos[0]+neighbor_vector[0],current.pos[1]+neighbor_vector[1]};
+            int neighbor_index = neighbor[1]*(x_size+1)+neighbor[0];
             if (buffer[neighbor_index] == '#') {
                 continue; 
             }
@@ -450,26 +450,26 @@ int main(){
 
             uint64_t neighbor_distance = 1; // just grid squares for now
             uint64_t new_distance = (uint64_t)map_get(distances, pos_to_key(current_dir, current.pos)).value+neighbor_distance+h;
-            result curr_neighbor_r = map_get(distances, pos_to_key(dir_index, neigbor));
+            result curr_neighbor_r = map_get(distances, pos_to_key(dir_index, neighbor));
             uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
             if (curr_neighbor_r.found == false|| new_distance <= current_neighbor_distance ) {
-                mheap_item new_search_position = {neighbor_distance,dir_index,{neigbor[0],neigbor[1]}};
+                mheap_item new_search_position = {neighbor_distance,dir_index,{neighbor[0],neighbor[1]}};
                 minheap_insert(&pq, new_search_position);
-                map_set(distances, pos_to_key(dir_index, neigbor), (void*)new_distance);
+                map_set(distances, pos_to_key(dir_index, neighbor), (void*)new_distance);
                 // buffer[neighbor_index] = dir_glyph[dir_index];
                 if (curr_neighbor_r.found == false) {
                     multiPath* new = new_mp();
                     append_path(new, new_path_item(false, current_dir,current.pos));
-                    map_set(came_from, pos_to_key(dir_index, neigbor), new);
+                    map_set(came_from, pos_to_key(dir_index, neighbor), new);
                 }else if (new_distance == current_neighbor_distance) {
-                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neigbor)).value;
+                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neighbor)).value;
                     // check for duplicate paths
                     append_path(existing_path,new_path_item(false, current_dir,current.pos));
                 }else if (new_distance < current_neighbor_distance) {
-                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neigbor)).value;
+                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neighbor)).value;
                     better_path(existing_path,new_path_item(false, current_dir,current.pos));
                 }
-                // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
+                // printf("n(%llu): %d %d c: %d %d\n",new_distance,neighbor[0],neighbor[1],current.pos[0],current.pos[1]);
             }
         }
     }
