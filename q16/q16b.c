@@ -345,6 +345,32 @@ path_track* new_path_item(bool isStart,int dir,int pos[2]){
 }
 
 typedef struct{
+    int length;
+    path_track* paths;
+} multiPath;
+
+multiPath new_mp(){
+    multiPath mp = {1,malloc(sizeof(path_track))};
+    return mp;
+}
+
+void free_mp(multiPath mp){
+    free(mp.paths);
+}
+
+void append_path(multiPath mp,path_track path){
+    mp.length++;
+    mp.paths = realloc(mp.paths,  sizeof(path_track)*mp.length);
+    mp.paths[mp.length-1] = path;
+}
+
+void better_path(multiPath mp, path_track path){
+    mp.length = 1;
+    mp.paths = realloc(mp.paths,  sizeof(path_track)*mp.length);
+    mp.paths[mp.length-1] = path;
+}
+
+typedef struct{
     uint64_t distance;
     int dir_of_distance;
 } distance_dir;
