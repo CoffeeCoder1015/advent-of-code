@@ -166,11 +166,6 @@ typedef struct{
     void (*free_entry)(map_entry*);
 } hashmap;
 
-//frees the internal array of the key of the Key
-void free_key(Key* key){
-    free(key->id);
-}
-
 #define INIT_CAPACITY 6400
 hashmap* new_hashmap(void (*free_function)(map_entry*)){
     hashmap* h = malloc(sizeof(hashmap));
@@ -191,7 +186,8 @@ void free_hashmap(hashmap* h){
                 }
             }
             for (size_t j = 0; j < h->entries[i].length; j++) {
-                free_key(&h->entries[i].kv_paris[j].key);
+                Key k = h->entries[i].kv_paris[j].key;
+                free(k.id);
             }
             free(h->entries[i].kv_paris);
         }
@@ -393,11 +389,10 @@ int main(){
     minheap_insert(&pq, start_item);
 
     hashmap* distances = new_hashmap(NULL);
-    Key start_key = pos_to_key(0, spos);
-    map_set(distances, start_key, 0);
+    map_set(distances, pos_to_key(0, spos), 0);
 
     hashmap* came_from = new_hashmap(free_path_track);
-    map_set(came_from, start_key, new_path_item(true, 0,spos));
+    map_set(came_from, pos_to_key(0, spos), new_path_item(true, 0,spos));
 
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
@@ -441,11 +436,12 @@ int main(){
     uint64_t current_distance;
     path_track current_node = {};
     for (int dir = 0 ; dir < 4; dir++) {
-        Key end_key =pos_to_key(dir, epos);
-        result end = map_get(came_from,end_key );
+        Key came_from_end_key =pos_to_key(dir, epos);
+        Key dist_end_key =pos_to_key(dir, epos);
+        result end = map_get(came_from,came_from_end_key );
         if (end.found == true) {
             path_track loop_node = *(path_track*)end.value;
-            uint64_t d = (uint64_t)map_get(distances, end_key).value;
+            uint64_t d = (uint64_t)map_get(distances, dist_end_key).value;
             if (d < current_distance || dir == 0) {
                 current_distance = d;
                 printf("%llu\n",d);
