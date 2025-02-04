@@ -400,8 +400,8 @@ int main(){
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
         if (current.pos[0] == epos[0] && current.pos[1] == epos[1]) {
-            // printf("p:%llu ( %d,%d ) %d\n",current.potential,current.pos[0],current.pos[1],pq.length);
-            break; 
+            result curr_neighbor_r = map_get(distances, pos_to_key(current.dir_index, current.pos));
+            printf("p:%llu ( %d,%d ) %d\n",(uint64_t)curr_neighbor_r.value,current.pos[0],current.pos[1],pq.length);
         }
 
         //old direction
@@ -424,11 +424,11 @@ int main(){
             uint64_t new_distance = (uint64_t)map_get(distances, pos_to_key(current_dir, current.pos)).value+neighbor_distance+h;
             result curr_neighbor_r = map_get(distances, pos_to_key(dir_index, neigbor));
             uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
-            if (curr_neighbor_r.found == false|| new_distance < current_neighbor_distance ) {
-                mheap_item new_search_position = {new_distance,dir_index,{neigbor[0],neigbor[1]}};
+            if (curr_neighbor_r.found == false|| new_distance <= current_neighbor_distance ) {
+                mheap_item new_search_position = {neighbor_distance,dir_index,{neigbor[0],neigbor[1]}};
                 minheap_insert(&pq, new_search_position);
                 map_set(distances, pos_to_key(dir_index, neigbor), (void*)new_distance);
-                // buffer[neighbor_index] = 'O';
+                // buffer[neighbor_index] = dir_glyph[dir_index];
                 map_set(came_from, pos_to_key(dir_index, neigbor),new_path_item(false, current_dir,current.pos));
                 // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
             }
