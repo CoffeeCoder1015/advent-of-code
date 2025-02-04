@@ -420,8 +420,10 @@ int main(){
     hashmap* distances = new_hashmap(NULL);
     map_set(distances, pos_to_key(0, spos), 0);
 
-    hashmap* came_from = new_hashmap(free_path_track);
-    map_set(came_from, pos_to_key(0, spos), new_path_item(true, 0,spos));
+    hashmap* came_from = new_hashmap(free_mp);
+    multiPath* start = new_mp();
+    append_path(start, new_path_item(true,0, spos));
+    map_set(came_from, pos_to_key(0, spos), start);
 
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
@@ -455,7 +457,18 @@ int main(){
                 minheap_insert(&pq, new_search_position);
                 map_set(distances, pos_to_key(dir_index, neigbor), (void*)new_distance);
                 // buffer[neighbor_index] = dir_glyph[dir_index];
-                map_set(came_from, pos_to_key(dir_index, neigbor),new_path_item(false, current_dir,current.pos));
+                if (curr_neighbor_r.found == false) {
+                    multiPath* new = new_mp();
+                    append_path(new, new_path_item(false, current_dir,current.pos));
+                    map_set(came_from, pos_to_key(dir_index, neigbor), new);
+                }else if (new_distance == current_neighbor_distance) {
+                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neigbor)).value;
+                    // check for duplicate paths
+                    append_path(existing_path,new_path_item(false, current_dir,current.pos));
+                }else if (new_distance < current_neighbor_distance) {
+                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neigbor)).value;
+                    better_path(existing_path,new_path_item(false, current_dir,current.pos));
+                }
                 // printf("n(%llu): %d %d c: %d %d\n",new_distance,neigbor[0],neigbor[1],current.pos[0],current.pos[1]);
             }
         }
