@@ -340,6 +340,10 @@ path_track new_path_item(bool isStart,int dir,int pos[2]){
     return item;
 }
 
+bool cmp_path(path_track p1, path_track p2){
+    return  p1.isStart == p2.isStart && p1.dir == p2.dir && p1.pos[0] == p2.pos[0] &&p1.pos[1] == p2.pos[1];    
+}
+
 typedef struct{
     int length;
     path_track* paths;
@@ -463,8 +467,10 @@ int main(){
                     map_set(came_from, pos_to_key(dir_index, neighbor), new);
                 }else if (new_distance == current_neighbor_distance) {
                     multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neighbor)).value;
-                    // check for duplicate paths
-                    append_path(existing_path,new_path_item(false, current_dir,current.pos));
+                    path_track new_path = new_path_item(false, current_dir, current.pos);
+                    if (!cmp_path( new_path, existing_path->paths[existing_path->length - 1])) {
+                      append_path(existing_path, new_path);
+                    }
                 }else if (new_distance < current_neighbor_distance) {
                     multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neighbor)).value;
                     better_path(existing_path,new_path_item(false, current_dir,current.pos));
