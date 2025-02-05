@@ -459,7 +459,7 @@ int main(){
             result curr_neighbor_r = map_get(distances, pos_to_key(dir_index, neighbor));
             uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
             if (curr_neighbor_r.found == false|| new_distance <= current_neighbor_distance ) {
-                mheap_item new_search_position = {neighbor_distance,dir_index,{neighbor[0],neighbor[1]}};
+                mheap_item new_search_position = {new_distance,dir_index,{neighbor[0],neighbor[1]}};
                 minheap_insert(&pq, new_search_position);
                 map_set(distances, pos_to_key(dir_index, neighbor), (void*)new_distance);
                 // buffer[neighbor_index] = dir_glyph[dir_index];
