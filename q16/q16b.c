@@ -1,4 +1,3 @@
-#include <corecrt.h>
 #include <math.h>
 #include <stdatomic.h>
 #include <stdbool.h>
