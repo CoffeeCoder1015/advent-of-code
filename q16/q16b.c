@@ -390,11 +390,6 @@ int modulo(int x, int y){
     return mod;
 }
 
-// Function to calculate Euclidean distance between two points (x1, y1) and (x2, y2)
-int squared_dist(int x1, int y1, int x2, int y2) {
-    return abs(x2 - x1) + abs(y2 - y1);
-}
-
 bool inArray(path_track check, path_track* array, int n){
     bool found = false;
     for(size_t i = 0; i<n ;i++){
@@ -450,8 +445,9 @@ int main(){
     for (;pq.length > 0;) {
         mheap_item current =  minheap_extract(&pq);
         if (current.pos[0] == epos[0] && current.pos[1] == epos[1]) {
-            result curr_neighbor_r = map_get(distances, pos_to_key(current.dir_index, current.pos));
-            printf("p:%llu ( %d,%d ) %d\n",(uint64_t)curr_neighbor_r.value,current.pos[0],current.pos[1],pq.length);
+            // result curr_neighbor_r = map_get(distances, pos_to_key(current.dir_index, current.pos));
+            // printf("p:%llu ( %d,%d ) %d\n",(uint64_t)curr_neighbor_r.value,current.pos[0],current.pos[1],pq.length);
+            continue;
         }
 
         //old direction
@@ -477,8 +473,6 @@ int main(){
             if (curr_neighbor_r.found == false|| new_distance <= current_neighbor_distance ) {
                 int same_dist_do_later = (new_distance==current_neighbor_distance)*1000000000;
                 int priority = new_distance+same_dist_do_later;
-                int dist_to_end = squared_dist(neighbor[0], neighbor[1], epos[0],epos[1]);
-                // priority*=dist_to_end*1/(reached_end_counter);
                 mheap_item new_search_position = {priority,dir_index,{neighbor[0],neighbor[1]}};
                 minheap_insert(&pq, new_search_position);
                 map_set(distances, pos_to_key(dir_index, neighbor), (void*)new_distance);
