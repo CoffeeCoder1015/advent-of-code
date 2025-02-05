@@ -463,18 +463,18 @@ int main(){
                 minheap_insert(&pq, new_search_position);
                 map_set(distances, pos_to_key(dir_index, neighbor), (void*)new_distance);
                 // buffer[neighbor_index] = dir_glyph[dir_index];
-                if (curr_neighbor_r.found == false) {
-                    multiPath* new = new_mp();
-                    append_path(new, new_path_item(false, current_dir,current.pos));
-                    map_set(came_from, pos_to_key(dir_index, neighbor), new);
+                result epath_r = map_get(came_from, pos_to_key(dir_index, neighbor));
+                multiPath *existing_path = epath_r.value;
+                if (epath_r.found == false) {
+                    existing_path = new_mp();
+                    append_path(existing_path, new_path_item(false, current_dir,current.pos));
+                    map_set(came_from, pos_to_key(dir_index, neighbor), existing_path);
                 }else if (new_distance == current_neighbor_distance) {
-                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neighbor)).value;
                     path_track new_path = new_path_item(false, current_dir, current.pos);
                     if (!cmp_path( new_path, existing_path->paths[existing_path->length - 1])) {
                       append_path(existing_path, new_path);
                     }
                 }else if (new_distance < current_neighbor_distance) {
-                    multiPath* existing_path = map_get(came_from, pos_to_key(dir_index, neighbor)).value;
                     better_path(existing_path,new_path_item(false, current_dir,current.pos));
                 }
                 // printf("n(%llu): %d %d c: %d %d\n",new_distance,neighbor[0],neighbor[1],current.pos[0],current.pos[1]);
