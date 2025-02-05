@@ -409,7 +409,7 @@ bool inArray(path_track check, path_track* array, int n){
 }
 int main(){
     FILE* inputs;
-    errno_t err = fopen_s(&inputs , "test.txt", "rb");
+    errno_t err = fopen_s(&inputs , "q16.txt", "rb");
     fseek(inputs, 0, SEEK_END);
     size_t read_count = ftell(inputs);
     rewind(inputs);
