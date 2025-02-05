@@ -353,8 +353,8 @@ typedef struct{
 
 multiPath* new_mp(){
     multiPath* mp = malloc(sizeof(multiPath));
-    mp->length = 1;
-    mp->paths = malloc(sizeof(path_track));
+    mp->length = 0;
+    mp->paths = malloc(0);
     return mp;
 }
 
