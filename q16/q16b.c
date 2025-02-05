@@ -391,6 +391,11 @@ int modulo(int x, int y){
     return mod;
 }
 
+// Function to calculate Euclidean distance between two points (x1, y1) and (x2, y2)
+int squared_dist(int x1, int y1, int x2, int y2) {
+    return abs(x2 - x1) + abs(y2 - y1);
+}
+
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs , "test.txt", "rb");
@@ -459,7 +464,11 @@ int main(){
             result curr_neighbor_r = map_get(distances, pos_to_key(dir_index, neighbor));
             uint64_t current_neighbor_distance = (uint64_t)curr_neighbor_r.value ;
             if (curr_neighbor_r.found == false|| new_distance <= current_neighbor_distance ) {
-                mheap_item new_search_position = {new_distance,dir_index,{neighbor[0],neighbor[1]}};
+                int same_dist_do_later = (new_distance==current_neighbor_distance)*1000000000;
+                int priority = new_distance+same_dist_do_later;
+                int dist_to_end = squared_dist(neighbor[0], neighbor[1], epos[0],epos[1]);
+                // priority*=dist_to_end*1/(reached_end_counter);
+                mheap_item new_search_position = {priority,dir_index,{neighbor[0],neighbor[1]}};
                 minheap_insert(&pq, new_search_position);
                 map_set(distances, pos_to_key(dir_index, neighbor), (void*)new_distance);
                 // buffer[neighbor_index] = dir_glyph[dir_index];
