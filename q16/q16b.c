@@ -478,18 +478,18 @@ int main(){
                 map_set(distances, pos_to_key(dir_index, neighbor), (void*)new_distance);
                 // buffer[neighbor_index] = dir_glyph[dir_index];
                 result epath_r = map_get(came_from, pos_to_key(dir_index, neighbor));
+                path_track new_path = new_path_item(false, current_dir, current.pos);
                 multiPath *existing_path = epath_r.value;
                 if (epath_r.found == false) {
                     existing_path = new_mp();
-                    append_path(existing_path, new_path_item(false, current_dir,current.pos));
+                    append_path(existing_path, new_path);
                     map_set(came_from, pos_to_key(dir_index, neighbor), existing_path);
                 }else if (new_distance == current_neighbor_distance) {
-                    path_track new_path = new_path_item(false, current_dir, current.pos);
                     if (!inArray(new_path, existing_path->paths, existing_path->length)) {
                       append_path(existing_path, new_path);
                     }
                 }else if (new_distance < current_neighbor_distance) {
-                    better_path(existing_path,new_path_item(false, current_dir,current.pos));
+                    better_path(existing_path,new_path);
                 }
                 // printf("n(%llu): %d %d c: %d %d\n",new_distance,neighbor[0],neighbor[1],current.pos[0],current.pos[1]);
             }
