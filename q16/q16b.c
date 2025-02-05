@@ -495,26 +495,41 @@ int main(){
             }
         }
     }
-    printf("%llu\n", target_dist);
-/*     while (!current_node.isStart) {
-        int current_index = current_node.pos[1] * (x_size + 1) + current_node.pos[0];
-        path_track prev_node = *(path_track *)map_get(came_from, pos_to_key(current_node.dir, current_node.pos)).value;
-        int x_diff = current_node.pos[0] - prev_node.pos[0];
-        int y_diff = current_node.pos[1] - prev_node.pos[1];
-        int sum = x_diff + y_diff;
-        int glyph_index;
-        if (sum == 1) {
-            glyph_index = y_diff;
-        } else {
-            if (x_diff == -1) {
-                glyph_index = 2;
-            } else {
-                glyph_index = 3;
+    int stack_count = 0;
+    path_track* track_stack = malloc(0);
+
+    for (int dir = 0 ; dir < 4; dir++) {
+        result end = map_get(came_from,pos_to_key(dir, epos) );
+        if (end.found == true) {
+           multiPath paths = *(multiPath*)end.value; 
+            for (int i = 0 ; i< paths.length ; i++) {
+                path_track track = paths.paths[i];
+                uint64_t d = (uint64_t)map_get(distances, pos_to_key(dir, epos)).value;
+                if (d == target_dist) {
+                    stack_count++;
+                    track_stack = realloc(track_stack, sizeof(path_track)*stack_count);
+                    track_stack[stack_count-1] = track;
+                }
             }
         }
-        buffer[current_index] = dir_glyph[glyph_index];
-        current_node = prev_node;
-    } */
+    }
+    
+    while (stack_count > 0) {
+        path_track current_node = track_stack[stack_count-1];
+        stack_count--;
+        if (current_node.isStart) {
+            continue;
+        }
+        int current_index = current_node.pos[1] * (x_size + 1) + current_node.pos[0];
+        multiPath prev_node = *(multiPath *)map_get(came_from, pos_to_key(current_node.dir, current_node.pos)).value;
+        buffer[current_index] = dir_glyph[current_node.dir];
+        int new_count = stack_count + prev_node.length;
+        track_stack = realloc(track_stack, sizeof(path_track) * new_count);
+        for (int i = 0 ; i < prev_node.length; i++) {
+            track_stack[i+stack_count] = prev_node.paths[i];
+        }
+        stack_count = new_count;
+    }
     printf("%s\n", buffer);
     free(buffer);
     free_hashmap(came_from);
