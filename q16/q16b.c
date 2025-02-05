@@ -396,6 +396,18 @@ int squared_dist(int x1, int y1, int x2, int y2) {
     return abs(x2 - x1) + abs(y2 - y1);
 }
 
+bool inArray(path_track check, path_track* array, int n){
+    bool found = false;
+    for(size_t i = 0; i<n ;i++){
+        path_track current = array[i];
+        // printf("%d == %d\n",check,curent);
+        if(cmp_path(check, current)){
+            found = true;
+            break;
+        }
+    }
+    return found;
+}
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs , "test.txt", "rb");
@@ -480,7 +492,7 @@ int main(){
                     map_set(came_from, pos_to_key(dir_index, neighbor), existing_path);
                 }else if (new_distance == current_neighbor_distance) {
                     path_track new_path = new_path_item(false, current_dir, current.pos);
-                    if (!cmp_path( new_path, existing_path->paths[existing_path->length - 1])) {
+                    if (!inArray(new_path, existing_path->paths, existing_path->length)) {
                       append_path(existing_path, new_path);
                     }
                 }else if (new_distance < current_neighbor_distance) {
