@@ -534,6 +534,7 @@ int main(){
         }
     }
     
+    int total_count = 2; //for start & end tile which wont be counted by the condition
     while (stack_count > 0) {
         path_track current_node = track_stack[stack_count-1];
         stack_count--;
@@ -542,15 +543,19 @@ int main(){
         }
         int current_index = current_node.pos[1] * (x_size + 1) + current_node.pos[0];
         multiPath prev_node = *(multiPath *)map_get(came_from, pos_to_key(current_node.dir, current_node.pos)).value;
-        buffer[current_index] = dir_glyph[current_node.dir];
         int new_count = stack_count + prev_node.length;
+        if (buffer[current_index] == '.') {
+            buffer[current_index] = dir_glyph[current_node.dir];
+            total_count++;
+        }
         track_stack = realloc(track_stack, sizeof(path_track) * new_count);
         for (int i = 0 ; i < prev_node.length; i++) {
             track_stack[i+stack_count] = prev_node.paths[i];
+            int nidx = track_stack[i+stack_count].pos[1] * (x_size + 1) + track_stack[i+stack_count].pos[0];
         }
         stack_count = new_count;
     }
-    printf("%s\n", buffer);
+    printf("%s%d\n", buffer,total_count);
     free(buffer);
     free_hashmap(came_from);
     free_hashmap(distances);
