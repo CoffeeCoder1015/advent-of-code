@@ -34,6 +34,9 @@ char** split(char string[], char delim){
     return  strarray;
 }
 
+// instruction ptr
+int prog_pointer = 0;
+
 //registers
 int A,B,C;
 int lit0 = 0;
@@ -48,7 +51,45 @@ void adv(int operand){
     A /= pow_result;
 }
 
-void (*opcode[8])(int) = {adv};
+void bxl(int operand){
+    B ^= operand;
+}
+
+void bst(int operand){
+    int value = *operand_map[operand];
+    B = value%8; 
+}
+
+void jnz(int operand){
+    if (A == 0) {
+        return;
+    }
+    prog_pointer = operand;
+}
+
+void bxc(int operand){
+    B ^= C;
+}
+
+void out(int operand){
+    int value = *operand_map[operand];
+    int mod = value%8;
+    printf("%d,",mod);
+}
+
+void bdv(int operand){
+    int value = *operand_map[operand];
+    double pow_result = pow(2, value);
+    B = A/pow_result;
+}
+
+void cdv(int operand){
+    int value = *operand_map[operand];
+    double pow_result = pow(2, value);
+    C = A/pow_result;
+}
+
+void (*opcode[8])(int) = {adv,bxl,bst,jnz,bxc,out,cdv};
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs,"test.txt", "r");
@@ -84,9 +125,12 @@ int main(){
     free(raw_program);
     
     
-    for (int prog_pointer = 0; prog_pointer<size;) {
+    for (; prog_pointer<size;) {
         int op = program[prog_pointer];
         int operand = program[prog_pointer+1];
+        if (op == 3) {
+            break;
+        }
     }
 
     
