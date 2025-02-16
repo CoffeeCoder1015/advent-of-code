@@ -35,6 +35,19 @@ char** split(char string[], char delim){
     return  strarray;
 }
 
+// program output manager
+int* output;
+int output_size = 0;
+void init_output(){
+    output = malloc(0);
+}
+
+void submit_output(int value) {
+    output_size++;
+    output = realloc(output, sizeof(int) * output_size);
+    output[output_size-1] = value;
+}
+
 // instruction ptr
 int prog_pointer = 0;
 
@@ -80,7 +93,7 @@ void bxc(int operand){
 void out(int operand){
     int value = *operand_map[operand];
     int mod = value%8;
-    printf("%d",mod);
+    submit_output(mod);
     prog_pointer += 2;
 }
 
@@ -134,10 +147,17 @@ int main(){
     free(raw_program);
     
     
+    init_output();
     for (; prog_pointer<size;) {
         int op = program[prog_pointer];
         int operand = program[prog_pointer+1];
         opcode_map[op](operand);
     }
     free(program);
+    printf("\n");
+    for (int i = 0; i < output_size; i++) {
+        printf("%d",output[i]);
+    }
+    printf("\n");
+    free(output);
 }
