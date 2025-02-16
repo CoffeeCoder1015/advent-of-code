@@ -154,9 +154,11 @@ int main(){
         opcode_map[op](operand);
     }
     free(program);
-    printf("\n");
     for (int i = 0; i < output_size; i++) {
         printf("%d",output[i]);
+        if (i+1 < output_size) {
+            printf(",");
+        }
     }
     printf("\n");
     free(output);
