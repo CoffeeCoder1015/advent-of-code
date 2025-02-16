@@ -98,7 +98,7 @@ void cdv(int operand){
     prog_pointer += 2;
 }
 
-void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,cdv};
+void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,bdv,cdv};
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs,"test.txt", "r");
