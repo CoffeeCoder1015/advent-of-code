@@ -33,21 +33,24 @@ char** split(char string[], char delim){
     return  strarray;
 }
 
+//registers
+int A,B,C;
+
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs,"test.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
-    int A = atoi(strchr(buffer, ':')+1);
+    A = atoi(strchr(buffer, ':')+1);
     buffer[0] = 0;
     // Reg B
     fgets(buffer,1024,inputs);
-    int B = atoi(strchr(buffer, ':')+1);
+    B = atoi(strchr(buffer, ':')+1);
     buffer[0] = 0;
     // Reg C
     fgets(buffer,1024,inputs);
-    int C = atoi(strchr(buffer, ':')+1);
+    C = atoi(strchr(buffer, ':')+1);
     buffer[0] = 0;
     
     fseek(inputs, 2 , SEEK_CUR);
