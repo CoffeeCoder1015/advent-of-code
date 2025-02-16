@@ -42,7 +42,8 @@ int lit2 = 2;
 int lit3 = 3;
 
 int *operand_map[7] = {&lit0, &lit1, &lit2, &lit3, &A, &B, &C};
-void adv(int value){
+void adv(int operand){
+    int value = *operand_map[operand];
     double pow_result = pow(2, value);
     A /= pow_result;
 }
@@ -86,7 +87,6 @@ int main(){
     for (int prog_pointer = 0; prog_pointer<size;) {
         int op = program[prog_pointer];
         int operand = program[prog_pointer+1];
-        int value = *operand_map[operand];
     }
 
     
