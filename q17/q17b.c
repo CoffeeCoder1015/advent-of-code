@@ -52,15 +52,15 @@ void submit_output(int value) {
 int prog_pointer = 0;
 
 //registers
-int A,B,C;
-int lit0 = 0;
-int lit1 = 1;
-int lit2 = 2;
-int lit3 = 3;
+size_t A,B,C;
+size_t lit0 = 0;
+size_t lit1 = 1;
+size_t lit2 = 2;
+size_t lit3 = 3;
 
-int *operand_map[7] = {&lit0, &lit1, &lit2, &lit3, &A, &B, &C};
+size_t *operand_map[7] = {&lit0, &lit1, &lit2, &lit3, &A, &B, &C};
 void adv(int operand){
-    int value = *operand_map[operand];
+    size_t value = *operand_map[operand];
     double pow_result = pow(2, value);
     A /= pow_result;
     prog_pointer += 2;
@@ -72,7 +72,7 @@ void bxl(int operand){
 }
 
 void bst(int operand){
-    int value = *operand_map[operand];
+    size_t value = *operand_map[operand];
     B = value%8; 
     prog_pointer += 2;
 }
@@ -91,21 +91,21 @@ void bxc(int operand){
 }
 
 void out(int operand){
-    int value = *operand_map[operand];
+    size_t value = *operand_map[operand];
     int mod = value%8;
     submit_output(mod);
     prog_pointer += 2;
 }
 
 void bdv(int operand){
-    int value = *operand_map[operand];
+    size_t value = *operand_map[operand];
     double pow_result = pow(2, value);
     B = A/pow_result;
     prog_pointer += 2;
 }
 
 void cdv(int operand){
-    int value = *operand_map[operand];
+    size_t value = *operand_map[operand];
     double pow_result = pow(2, value);
     C = A/pow_result;
     prog_pointer += 2;
@@ -114,19 +114,19 @@ void cdv(int operand){
 void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,bdv,cdv};
 int main(){
     FILE* inputs;
-    errno_t err = fopen_s(&inputs,"q17.txt", "r");
+    errno_t err = fopen_s(&inputs,"test.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
-    A = atoi(strchr(buffer, ':')+1);
+    A = atoll(strchr(buffer, ':')+1);
     buffer[0] = 0;
     // Reg B
     fgets(buffer,1024,inputs);
-    B = atoi(strchr(buffer, ':')+1);
+    B = atoll(strchr(buffer, ':')+1);
     buffer[0] = 0;
     // Reg C
     fgets(buffer,1024,inputs);
-    C = atoi(strchr(buffer, ':')+1);
+    C = atoll(strchr(buffer, ':')+1);
     buffer[0] = 0;
     
     fseek(inputs, 2 , SEEK_CUR);
@@ -141,7 +141,7 @@ int main(){
     
     int* program = malloc(sizeof(int)*size);
     for (int i = 0; i<size;i++) {
-        program[i] = atoi(raw_program[i]);
+        program[i] = atoll(raw_program[i]);
         free(raw_program[i]);
     }
     free(raw_program);
