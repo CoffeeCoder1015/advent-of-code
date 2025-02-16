@@ -101,7 +101,7 @@ void cdv(int operand){
 void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,bdv,cdv};
 int main(){
     FILE* inputs;
-    errno_t err = fopen_s(&inputs,"test.txt", "r");
+    errno_t err = fopen_s(&inputs,"q17.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
