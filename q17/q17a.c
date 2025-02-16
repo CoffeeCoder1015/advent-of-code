@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +36,18 @@ char** split(char string[], char delim){
 
 //registers
 int A,B,C;
+int lit0 = 0;
+int lit1 = 1;
+int lit2 = 2;
+int lit3 = 3;
 
+int *operand_map[7] = {&lit0, &lit1, &lit2, &lit3, &A, &B, &C};
+void adv(int value){
+    double pow_result = pow(2, value);
+    A /= pow_result;
+}
+
+void (*opcode[8])(int) = {adv};
 int main(){
     FILE* inputs;
     errno_t err = fopen_s(&inputs,"test.txt", "r");
@@ -70,12 +82,6 @@ int main(){
     }
     free(raw_program);
     
-    int lit0 = 0; 
-    int lit1 = 1;
-    int lit2 = 2;
-    int lit3 = 3; 
-
-    int* operand_map[7] = {&lit0,&lit1,&lit2,&lit3,&A,&B,&C};
     
     for (int prog_pointer = 0; prog_pointer<size;) {
         int op = program[prog_pointer];
