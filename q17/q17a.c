@@ -80,7 +80,7 @@ void bxc(int operand){
 void out(int operand){
     int value = *operand_map[operand];
     int mod = value%8;
-    printf("%d,",mod);
+    printf("%d",mod);
     prog_pointer += 2;
 }
 
