@@ -35,6 +35,19 @@ char** split(char string[], char delim){
     return  strarray;
 }
 
+// program output manager
+int* output;
+int output_size = 0;
+void init_output(){
+    output = malloc(0);
+}
+
+void submit_output(int value) {
+    output_size++;
+    output = realloc(output, sizeof(int) * output_size);
+    output[output_size-1] = value;
+}
+
 // instruction ptr
 int prog_pointer = 0;
 
@@ -81,6 +94,7 @@ void out(int operand){
     int value = *operand_map[operand];
     int mod = value%8;
     printf("%d,",mod);
+    submit_output(mod);
     prog_pointer += 2;
 }
 
@@ -101,7 +115,7 @@ void cdv(int operand){
 void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,bdv,cdv};
 int main(){
     FILE* inputs;
-    errno_t err = fopen_s(&inputs,"test.txt", "r");
+    errno_t err = fopen_s(&inputs,"q17.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
@@ -134,10 +148,17 @@ int main(){
     free(raw_program);
     
     
+    init_output();
     for (; prog_pointer<size;) {
         int op = program[prog_pointer];
         int operand = program[prog_pointer+1];
         opcode_map[op](operand);
     }
     free(program);
+    printf("\n");
+    for (int i = 0; i < output_size; i++) {
+        printf("%d",output[i]);
+    }
+    printf("\n");
+    free(output);
 }
