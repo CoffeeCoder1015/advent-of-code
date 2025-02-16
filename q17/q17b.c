@@ -61,8 +61,7 @@ size_t lit3 = 3;
 size_t *operand_map[7] = {&lit0, &lit1, &lit2, &lit3, &A, &B, &C};
 void adv(int operand){
     size_t value = *operand_map[operand];
-    double pow_result = pow(2, value);
-    A /= pow_result;
+    A >>= value;
     prog_pointer += 2;
 }
 
@@ -99,22 +98,20 @@ void out(int operand){
 
 void bdv(int operand){
     size_t value = *operand_map[operand];
-    double pow_result = pow(2, value);
-    B = A/pow_result;
+    B = A>>value;
     prog_pointer += 2;
 }
 
 void cdv(int operand){
     size_t value = *operand_map[operand];
-    double pow_result = pow(2, value);
-    C = A/pow_result;
+    C = A>>value;
     prog_pointer += 2;
 }
 
 void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,bdv,cdv};
 int main(){
     FILE* inputs;
-    errno_t err = fopen_s(&inputs,"test.txt", "r");
+    errno_t err = fopen_s(&inputs,"q17.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
