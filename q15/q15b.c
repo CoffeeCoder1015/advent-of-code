@@ -1,6 +1,5 @@
 #include <corecrt.h>
 #include <math.h>
-#include <setjmp.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -133,49 +132,39 @@ int main() {
         queue[0][0] = pos[0];
         queue[0][1] = pos[1];
         int foundWall = false;
-        for (;;) {
-            int current_queue_size = queue_size;
-            for (int i = queue_pointer; i < current_queue_size; i++) {
-                int* current_pos = queue[i];
-                int current_index = current_pos[1]*(x_size+1)+current_pos[0];
-                int next_pos[2] = {current_pos[0]+direction_vec[0],current_pos[1]+direction_vec[1]};
-                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
-                if (map[next_index] == '.') {
-                    continue; 
-                }
-                if (map[next_index] == '#') {
-                    foundWall = true; 
-                    break;
-                }
-                bool inarray = inArrayC(next_pos, &queue[queue_pointer], queue_size-queue_pointer);
-                if (!inarray) {
+        for (int i = queue_pointer; i < queue_size; i++) {
+            int* current_pos = queue[i];
+            int current_index = current_pos[1]*(x_size+1)+current_pos[0];
+            int next_pos[2] = {current_pos[0]+direction_vec[0],current_pos[1]+direction_vec[1]};
+            int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+            if (map[next_index] == '.') {
+                continue; 
+            }
+            if (map[next_index] == '#') {
+                foundWall = true; 
+                break;
+            }
+            bool inarray = inArrayC(next_pos, &queue[queue_pointer], queue_size-queue_pointer);
+            if (!inarray) {
+                queue_size++;
+                queue = realloc(queue,sizeof(int[2])*queue_size);
+                queue[queue_size-1][0] = next_pos[0];
+                queue[queue_size-1][1] = next_pos[1];
+                // top down special handling for multi box push 
+                char current_box = map[current_index];
+                char next_box = map[next_index];
+                if (( direction_index == 1 || direction_index == 3 ) && (next_box != current_box)) {
+                    // cur [ next ] deviation = x-1
+                    // cur ] enxt [ deviation = x+1
                     queue_size++;
                     queue = realloc(queue,sizeof(int[2])*queue_size);
-                    queue[queue_size-1][0] = next_pos[0];
-                    queue[queue_size-1][1] = next_pos[1];
-                    // top down special handling for multi box push 
-                    char current_box = map[current_index];
-                    char next_box = map[next_index];
-                    if (( direction_index == 1 || direction_index == 3 ) && (next_box != current_box)) {
-                        // cur [ next ] deviation = x-1
-                        // cur ] enxt [ deviation = x+1
-                        queue_size++;
-                        queue = realloc(queue,sizeof(int[2])*queue_size);
-                        if (next_box == '[') {
-                            queue[queue_size-1][0] = next_pos[0]+1;
-                        }else if (next_box == ']') {
-                            queue[queue_size-1][0] = next_pos[0]-1;
-                        }
-                        queue[queue_size-1][1] = next_pos[1];
+                    if (next_box == '[') {
+                        queue[queue_size-1][0] = next_pos[0]+1;
+                    }else if (next_box == ']') {
+                        queue[queue_size-1][0] = next_pos[0]-1;
                     }
+                    queue[queue_size-1][1] = next_pos[1];
                 }
-            }
-            if (foundWall) {
-                break; 
-            }
-            queue_pointer = current_queue_size;
-            if (current_queue_size == queue_size) {
-                break; 
             }
         }
         if (!foundWall) { //perform the moving forward of all the boxes & robot by recursing through the queue backwards
