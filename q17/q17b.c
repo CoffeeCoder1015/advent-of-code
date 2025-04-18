@@ -234,7 +234,7 @@ int main(){
     _setmode(_fileno(stdout), _O_U16TEXT);
 #endif
     FILE* inputs;
-    errno_t err = fopen_s(&inputs,"test.txt", "r");
+    errno_t err = fopen_s(&inputs,"q17.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
