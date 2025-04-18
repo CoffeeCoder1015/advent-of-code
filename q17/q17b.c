@@ -183,6 +183,17 @@ void resetState(){
     output_size = 0;
 }
 
+void printOutput(){
+    for (int i = 0; i < output_size; i++) {
+        wprintf(L"%zu",output[i]);
+        if (i+1 < output_size) {
+            wprintf(L",");
+        }
+    }
+    wprintf(L"\n");
+}
+
+
 int main(){
     setlocale(LC_ALL, "");
 
@@ -225,36 +236,48 @@ int main(){
     }
     free(raw_program);
     
-    
-    init_output();
-    for (; prog_pointer<size;) {
-        int op = program[prog_pointer];
-        int operand = program[prog_pointer+1];
+    size_t workingA = 0;
+    for (int i = 0;i < 10;i++) {
+        for (int a = 0; a < 8; a++) {
+            A = a;
+            init_output();
+            for (; prog_pointer<size;) {
+                int op = program[prog_pointer];
+                int operand = program[prog_pointer+1];
 
-        int old_ptr = prog_pointer;
-        size_t oldA = A;
-        size_t oldB = B;
-        size_t oldC = C;
-        opcode_map[op](operand);
-        // recordRegister(oldA,oldB,oldC);
-        // recordJump(old_ptr, prog_pointer, raw_copy);
-    }
-    for (int i = 0; i < output_size; i++) {
-        wprintf(L"%d",output[i]);
-        if (i+1 < output_size) {
-            wprintf(L",");
+                int old_ptr = prog_pointer;
+                size_t oldA = A;
+                size_t oldB = B;
+                size_t oldC = C;
+                opcode_map[op](operand);
+                // recordRegister(oldA,oldB,oldC);
+                // recordJump(old_ptr, prog_pointer, raw_copy);
+            }
+            for (int i = 0; i < output_size; i++) {
+                wprintf(L"%d",output[i]);
+                if (i+1 < output_size) {
+                    wprintf(L",");
+                }
+            }
+            wprintf(L"\n");
+            // int matched = 0;
+            // for (int i = 0; i < output_size; i++) {
+            //     int offset =  size-output_size;
+            //     int check = output[i]==program[i+offset];
+            //     matched += check;
+            //     wprintf(L"%d",check);
+            //     if (i+1 < output_size) {
+            //         wprintf(L",");
+            //     }
+            // }
+            // wprintf(L"\n");
+            // if (matched == size) {
+            //     break; 
+            // }
+            resetState();
         }
     }
-    wprintf(L"\n");
-    for (int i = 0; i < output_size; i++) {
-        int offset =  size-output_size;
-        wprintf(L"%d",output[i]==program[i+offset]);
-        if (i+1 < output_size) {
-            wprintf(L",");
-        }
-    }
-    wprintf(L"\n");
-    resetState();
+    printOutput();
 
     free(program);
     free(output);
