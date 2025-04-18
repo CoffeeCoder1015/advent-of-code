@@ -194,6 +194,12 @@ void printOutput(){
 }
 
 
+// The optimized version of the program intepreter
+// Since the quine sequence is constructed in revserse,
+// the first output is also the only one the solution needs.
+// This is true as the program consumes `A` right-to-left, but the value of `A`
+// is constructed left-to-right. 
+// So the latest guess at what `A` is, is also the latest output.
 void runProgram_Opt(int* program, int size){
     for (; prog_pointer<size;) {
         int op = program[prog_pointer];
@@ -204,7 +210,7 @@ void runProgram_Opt(int* program, int size){
         }
     }
 }
-void runProgram(int* program, int size){
+void runProgram(int* program, int size, char* raw_copy){
     for (; prog_pointer<size;) {
         int op = program[prog_pointer];
         int operand = program[prog_pointer+1];
@@ -219,7 +225,10 @@ void runProgram(int* program, int size){
     }
 }
 
-
+typedef struct{
+    int index;
+    size_t workinA;
+} stack_item;
 
 int main(){
     setlocale(LC_ALL, "");
@@ -263,21 +272,40 @@ int main(){
     }
     free(raw_program);
     
-    init_output();
-    for (; prog_pointer<size;) {
-        int op = program[prog_pointer];
-        int operand = program[prog_pointer+1];
+    int stack_size = 1;
+    stack_item* stack = malloc(1*sizeof(stack_item));
+    stack[0].index = 0; 
+    stack[0].workinA = 0;
 
-        int old_ptr = prog_pointer;
-        size_t oldA = A;
-        size_t oldB = B;
-        size_t oldC = C;
-        opcode_map[op](operand);
-        // recordRegister(oldA,oldB,oldC);
-        // recordJump(old_ptr, prog_pointer, raw_copy);
+    size_t answer;
+    for (;;) {
+        stack_item popped = stack[stack_size-1];
+        int i = popped.index;
+        size_t workinA = popped.workinA;
+        if (i == size) {
+            break; 
+        }
+        stack_size--;
+        stack = realloc(stack, stack_size*sizeof(stack_item));
+
+        int target = program[size-i-1];
+
+        for (int a = 7; a >= 0; a--) {
+            A = workinA << 3 | a;
+            init_output();
+            runProgram_Opt(program,size);
+            // runProgram(program,size,raw_copy);
+            if (target == output[0]) {
+                stack_item new_item = {i+1,workinA << 3 | a};
+                stack_size++;
+                stack = realloc(stack, stack_size*sizeof(stack_item));
+                stack[stack_size-1] = new_item;
+            }
+            resetState();
+        }
     }
-    printOutput();
-
+    wprintf(L"%zu\n",stack[stack_size-1].workinA);
+    free(stack);
     free(program);
     free(output);
 }
