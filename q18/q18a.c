@@ -2,13 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TESTING
+// #define TESTING
 #ifdef TESTING
     #define SQR_SIZE 7
     #define INPUT "test.txt"
+    #define SIM 12
 #else
     #define SQR_SIZE 71
     #define INPUT "q18.txt"
+    #define SIM 1024
 #endif
 
 int square_size = SQR_SIZE;
@@ -41,17 +43,20 @@ int main(){
 
     char* line_end = strchr(raw_coords, '\n');
     char* line_start = raw_coords;
-    for (int i = 0; i < 22; i++) {
+    for (int i = 0; i < SIM; i++) {
         char* sep = strchr(line_start, ',');
         *sep = '\0';
         int x = atoi(line_start);
         *line_end = '\0';
         int y = atoi(sep+1);
-        printf("%d %d\n",x,y);
+
+        memory[y*(square_size)+x] = 1;
+
         if (line_end != NULL) {
             line_start = line_end+1;
             line_end = strchr(line_end+1, '\n');
         }
     }
+    printGrid(memory);
     free(raw_coords);
 }
