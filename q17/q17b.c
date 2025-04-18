@@ -1,9 +1,15 @@
+#include <locale.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
+#ifdef _WIN32
+#  include <fcntl.h>
+#  include <io.h>
+#endif
 
 char** split(char string[], char delim){
     size_t delim_count = 0;
@@ -58,21 +64,32 @@ size_t lit1 = 1;
 size_t lit2 = 2;
 size_t lit3 = 3;
 
+// #define _FuncLog
+
 size_t *operand_map[7] = {&lit0, &lit1, &lit2, &lit3, &A, &B, &C};
 void adv(int operand){
     size_t value = *operand_map[operand];
     A >>= value;
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;48;227;224madv() [Resolved: %zu] [From: %d] \x1b[0m\n",value,operand);
+#endif /* ifdef MACRO */
     prog_pointer += 2;
 }
 
 void bxl(int operand){
     B ^= operand;
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;50;168;50mbxl() [Operand: %d]\x1b[0m\n",operand);
+#endif /* ifdef MACRO */
     prog_pointer += 2;
 }
 
 void bst(int operand){
     size_t value = *operand_map[operand];
     B = value%8; 
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;194;255;223mbst() [Full: %zu] [From: %d]\x1b[0m\n",value,operand);
+#endif /* ifdef MACRO */
     prog_pointer += 2;
 }
 
@@ -81,10 +98,16 @@ void jnz(int operand){
       prog_pointer += 2;
       return;
     }
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;232;63;193mjnz() jump to %d\x1b[0m\n",operand);
+#endif /* ifdef MACRO */
     prog_pointer = operand;
 }
 
 void bxc(int operand){
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;177;209;50mbxc() B = %zu XOR %zu\x1b[0m\n",B,C);
+#endif /* ifdef MACRO */
     B ^= C;
     prog_pointer += 2;
 }
@@ -92,6 +115,9 @@ void bxc(int operand){
 void out(int operand){
     size_t value = *operand_map[operand];
     int mod = value%8;
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;227;89;48m[Output: %d] [Full: %zu] [From: %d]\x1b[0m\n", mod, value, operand);
+#endif /* ifdef MACRO */
     submit_output(mod);
     prog_pointer += 2;
 }
@@ -99,19 +125,72 @@ void out(int operand){
 void bdv(int operand){
     size_t value = *operand_map[operand];
     B = A>>value;
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;59;78;138mbdv() [Resolved: %zu] [From: %d] \x1b[0m\n",value,operand);
+#endif /* ifdef MACRO */
     prog_pointer += 2;
 }
 
 void cdv(int operand){
     size_t value = *operand_map[operand];
     C = A>>value;
+#ifdef _FuncLog
+    wprintf(L"\x1b[38;2;116;78;194mcdv() [Resolved: %zu] [From: %d] \x1b[0m\n",value,operand);
+#endif /* ifdef MACRO */
     prog_pointer += 2;
 }
 
 void (*opcode_map[8])(int) = {adv,bxl,bst,jnz,bxc,out,bdv,cdv};
+
+/* Trace functions*/
+
+void recordRegister(size_t oldA, size_t oldB, size_t oldC){
+    wprintf(L"[A:%zu B:%zu C:%zu] -> [A:%zu B:%zu C:%zu]\n",oldA,oldB,oldC,A,B,C);
+}
+void recordJump(int old, int new, char* prog_str){
+    int n = strlen(prog_str);
+
+    wchar_t end = L'↓';
+    wchar_t start1 = L'⌉';
+    wchar_t start2 = L'⌈';
+    wchar_t line = L'¯';
+
+    int line_n =  abs(new-old)*2-1;
+    wchar_t* line_r = malloc(line_n*sizeof(wchar_t)+1);
+    for (int i = 0; i < line_n; i++) {
+        line_r[i]  = line;
+    }
+    line_r[line_n] = L'\0';
+
+    wchar_t buffer[100];
+    if (new < old) {
+        swprintf(buffer,100, L"%*lc%ls%lc\n", 2*new+1,end,line_r,start1); 
+    }else{
+        swprintf(buffer,100, L"%*lc%ls%lc\n", 2*old+1, start2,line_r,end); 
+    }
+    wprintf(L"%ls",buffer);
+    wprintf(L"%s\n",prog_str);
+}
+
+/* Reset state */
+void resetState(){
+    prog_pointer = 0;
+    A = 0;
+    B = 0;
+    C = 0;
+    free(output);
+    output = malloc(0);
+    output_size = 0;
+}
+
 int main(){
+    setlocale(LC_ALL, "");
+
+#ifdef _WIN32
+    _setmode(_fileno(stdout), _O_U16TEXT);
+#endif
     FILE* inputs;
-    errno_t err = fopen_s(&inputs,"q17.txt", "r");
+    errno_t err = fopen_s(&inputs,"test.txt", "r");
     char buffer[1024];
     // Reg A
     fgets(buffer,1024,inputs);
@@ -130,6 +209,9 @@ int main(){
 
     fgets(buffer,1024,inputs);
     char* prog_start = strchr(buffer, ':') + 2;
+
+    char* raw_copy = _strdup(prog_start);
+
     char** raw_program = split(prog_start, ',');
     int size = 0;
     for (int i = 0; raw_program[i]!=0;i++) {
@@ -148,15 +230,32 @@ int main(){
     for (; prog_pointer<size;) {
         int op = program[prog_pointer];
         int operand = program[prog_pointer+1];
+
+        int old_ptr = prog_pointer;
+        size_t oldA = A;
+        size_t oldB = B;
+        size_t oldC = C;
         opcode_map[op](operand);
+        // recordRegister(oldA,oldB,oldC);
+        // recordJump(old_ptr, prog_pointer, raw_copy);
     }
-    free(program);
     for (int i = 0; i < output_size; i++) {
-        printf("%d",output[i]);
+        wprintf(L"%d",output[i]);
         if (i+1 < output_size) {
-            printf(",");
+            wprintf(L",");
         }
     }
-    printf("\n");
+    wprintf(L"\n");
+    for (int i = 0; i < output_size; i++) {
+        int offset =  size-output_size;
+        wprintf(L"%d",output[i]==program[i+offset]);
+        if (i+1 < output_size) {
+            wprintf(L",");
+        }
+    }
+    wprintf(L"\n");
+    resetState();
+
+    free(program);
     free(output);
 }
