@@ -11,6 +11,16 @@
 #endif
 
 int square_size = SQR_SIZE;
+char gridAtlas[] = ".#O";
+
+void printGrid(int* grid){
+    for (int i = 0; i < square_size*square_size; i++) {
+        printf("%c",gridAtlas[grid[i]]);
+        if ((i+1)%square_size == 0) {
+            printf("\n");
+        }
+    }
+}
 
 int main(){
     FILE* input;
@@ -24,6 +34,8 @@ int main(){
     raw_coords[read_count] = '\0';
     fread(raw_coords, sizeof(char), read_count, input);
     fclose(input);
+
+    int* memory = calloc(square_size*square_size, sizeof(int));
 
 
     free(raw_coords);
