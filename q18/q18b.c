@@ -360,38 +360,7 @@ uint64_t distance(int pos1[2], int pos2[2]){
     return ( abs( pos1[0]-pos2[0] )<<1 ) + ( abs(pos1[1] - pos2[1])<<1 );
 }
 
-int main(){
-    FILE* input;
-    fopen_s(&input,INPUT,"rb");
-
-    fseek(input, 0, SEEK_END);
-    size_t read_count = ftell(input);
-    rewind(input);
-
-    char* raw_coords = malloc(read_count+1);
-    raw_coords[read_count] = '\0';
-    fread(raw_coords, sizeof(char), read_count, input);
-    fclose(input);
-
-    int* memory = calloc(square_size*square_size, sizeof(int));
-
-    char* line_end = strchr(raw_coords, '\n');
-    char* line_start = raw_coords;
-    for (int i = 0; i < SIM; i++) {
-        char* sep = strchr(line_start, ',');
-        *sep = '\0';
-        int x = atoi(line_start);
-        *line_end = '\0';
-        int y = atoi(sep+1);
-
-        memory[y*(square_size)+x] = 1;
-
-        if (line_end != NULL) {
-            line_start = line_end+1;
-            line_end = strchr(line_end+1, '\n');
-        }
-    }
-
+result a_star_search(int* memory){
     /* A* setup*/
     minheap pq = new_minheap();
     hashmap* distances = hashmap_new(NULL, pos_to_key);
@@ -450,12 +419,47 @@ int main(){
     
     int ending_position[2] = {square_size-1,square_size-1};
     result r_last_dist = hashmap_get(distances,ending_position);
-    uint64_t last_dist = (uint64_t)r_last_dist.value;
-    printf("%llu\n",last_dist);
 
     /* A* cleanup */
     free_minheap(&pq);
     hashmap_free(distances);
     hashmap_free(camefrom);
+    return r_last_dist;
+}
+
+int main(){
+    FILE* input;
+    fopen_s(&input,INPUT,"rb");
+
+    fseek(input, 0, SEEK_END);
+    size_t read_count = ftell(input);
+    rewind(input);
+
+    char* raw_coords = malloc(read_count+1);
+    raw_coords[read_count] = '\0';
+    fread(raw_coords, sizeof(char), read_count, input);
+    fclose(input);
+
+    int* memory = calloc(square_size*square_size, sizeof(int));
+
+    char* line_end = strchr(raw_coords, '\n');
+    char* line_start = raw_coords;
+    for (int i = 0; i < SIM; i++) {
+        char* sep = strchr(line_start, ',');
+        *sep = '\0';
+        int x = atoi(line_start);
+        *line_end = '\0';
+        int y = atoi(sep+1);
+
+        memory[y*(square_size)+x] = 1;
+
+        if (line_end != NULL) {
+            line_start = line_end+1;
+            line_end = strchr(line_end+1, '\n');
+        }
+    }
+
+    result r = a_star_search(memory);
+
     free(raw_coords);
 }
