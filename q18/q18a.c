@@ -355,6 +355,10 @@ void printGrid(int* grid){
     }
 }
 
+uint64_t distance(int pos1[2], int pos2[2]){
+    return ( abs( pos1[0]-pos2[0] )<<1 ) + ( abs(pos1[1] - pos2[1])<<1 );
+}
+
 int main(){
     FILE* input;
     fopen_s(&input,INPUT,"rb");
@@ -369,7 +373,6 @@ int main(){
     fclose(input);
 
     int* memory = calloc(square_size*square_size, sizeof(int));
-
 
     char* line_end = strchr(raw_coords, '\n');
     char* line_start = raw_coords;
@@ -403,8 +406,47 @@ int main(){
     hashmap_set(camefrom, start_position, new_path_item(start_position));
 
     /* A* path finding */
+    int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
 
+    for (;pq.heap_length > 0;) {
+        mhitem current_pos = minheap_extract(&pq);
+        //termination condition
+        if (current_pos.pos[0] == square_size-1 && current_pos.pos[1] == square_size-1) {
+            break;
+        }
 
+        for (int i = 0 ; i < 4; i++) {
+            int* direction = directions[i];
+            int next_pos[2] = {current_pos.pos[0]+direction[0], current_pos.pos[1]+direction[1]};
+
+            int next_index = next_pos[1]*square_size+next_pos[0];
+            bool x_in = 0<= next_pos[0] && next_pos[0] < square_size;
+            bool y_in = 0<= next_pos[1] && next_pos[1] < square_size;
+
+            // skip when 'wall' encountered
+            if (!(x_in && y_in) || memory[next_index] == 1) { 
+                continue; 
+            }
+
+            uint64_t current_distance = (uint64_t)hashmap_get(distances, current_pos.pos).value;
+            uint64_t predicted_distance = current_distance+1;
+            result next_distance = hashmap_get(distances, next_pos);
+
+            if (!next_distance.found || predicted_distance < (uint64_t)next_distance.value ) {
+                uint64_t adjusted_weight = distance(next_pos,current_pos.pos);
+                mhitem next_frontier = {adjusted_weight,{next_pos[0],next_pos[1]}};
+
+                minheap_insert(&pq, next_frontier);
+
+                hashmap_set(distances, next_pos, (void*)predicted_distance);
+
+                hashmap_set(camefrom, next_pos, new_path_item(current_pos.pos));
+
+                // visualisation 
+                memory[next_index] = 2;
+            }
+        }
+    }
     /* A* cleanup */
     free_minheap(&pq);
     hashmap_free(distances);
