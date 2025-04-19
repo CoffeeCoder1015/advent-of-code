@@ -443,10 +443,29 @@ int main(){
                 hashmap_set(camefrom, next_pos, new_path_item(current_pos.pos));
 
                 // visualisation 
-                memory[next_index] = 2;
+                // memory[next_index] = 2;
             }
         }
     }
+    
+    /* Path construction */
+    int ending_position[2] = {square_size-1,square_size-1};
+    int* last_pos = hashmap_get(camefrom,ending_position).value;
+    for (;;) {
+        bool x_eq = last_pos[0] == start_position[0];
+        bool y_eq = last_pos[1] == start_position[1];
+        if (x_eq&&y_eq) {
+            break;
+        } 
+
+        int last_index = last_pos[1]*square_size+last_pos[0];
+
+        // visualisation
+        memory[last_index] = 2;
+        last_pos = hashmap_get(camefrom, last_pos).value;
+    }
+
+    printGrid(memory);
     /* A* cleanup */
     free_minheap(&pq);
     hashmap_free(distances);
