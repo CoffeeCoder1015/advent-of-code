@@ -344,10 +344,6 @@ path_track* new_path_item(bool isStart,int dir,int pos[2]){
     return item;
 }
 
-typedef struct{
-    uint64_t distance;
-    int dir_of_distance;
-} distance_dir;
 
 int modulo(int x, int y){
     //why does the C modulo operator seem to only work on positive numbers, I will never know. . . .

@@ -375,11 +375,6 @@ void better_path(multiPath* mp, path_track path){
     mp->paths[mp->length-1] = path;
 }
 
-typedef struct{
-    uint64_t distance;
-    int dir_of_distance;
-} distance_dir;
-
 int modulo(int x, int y){
     //why does the C modulo operator seem to only work on positive numbers, I will never know. . . .
 
