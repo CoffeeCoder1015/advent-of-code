@@ -148,6 +148,8 @@ void hashmap_free(hashmap* h){
                 free(entry_ptr->collisions);
             }
         }
+        free(h->map_entries);
+        free(h);
         return;
     }
     // for hashmaps with primitive values stored as cast (void*) pointers
@@ -162,6 +164,8 @@ void hashmap_free(hashmap* h){
             free(entry_ptr->collisions);
         }
     }
+    free(h->map_entries);
+    free(h);
 }
 
 #define FNV_OFFSET 14695981039346656037UL
@@ -245,6 +249,18 @@ bool hashmap_expand(hashmap* h){
         }
     }
 
+    for (int i = 0; i < h->capacity; i++) {
+        Map_hashed_position* entry_ptr = &h->map_entries[i];
+        bool is_empty_entry = entry_ptr->length == 0;
+        if (!is_empty_entry) {
+            for (int entry = 0; entry < entry_ptr->length; entry++) {
+                if (h->free_entry != NULL) {
+                    h->free_entry(&entry_ptr->collisions[entry]);
+                }
+            }
+            free(entry_ptr->collisions);
+        }
+    }
     free(h->map_entries);
     h->map_entries = new_entries;
     h->capacity = new_capacity;
