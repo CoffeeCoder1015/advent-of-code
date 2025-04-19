@@ -103,33 +103,33 @@ typedef struct{
 typedef struct{
     Key key;
     void* value;
-} Map_KV;
+} map_entry;
 
 typedef struct{
-    Map_KV* collisions;
+    map_entry* entries;
     int length;
-} Map_hashed_position;
+} map_slot;
 
 typedef struct{
-    Map_hashed_position* map_entries;
+    map_slot* slots;
     int length;
     int capacity;
     //used to free the indivual values in kv pairs
     //set to NULL if void* value does not actually point to a heap allocated resource
-    void (*free_entry)(Map_KV*);
+    void (*free_entry)(map_entry*);
     // used to convert a general datatype into a Key object
     Key (*to_key)(void*);
 } hashmap;
 
 #define INIT_CAPACITY 6400
-hashmap* hashmap_new(void (*free_function)(Map_KV*), Key (*to_key)(void*)){
+hashmap* hashmap_new(void (*free_function)(map_entry*), Key (*to_key)(void*)){
     hashmap* h = malloc(sizeof(hashmap));
     h->length = 0;
     h->capacity = INIT_CAPACITY;
     h->free_entry = free_function;
     h->to_key = to_key;
 
-    h->map_entries = calloc(h->capacity, sizeof(Map_hashed_position));
+    h->slots = calloc(h->capacity, sizeof(map_slot));
     return h;
 }
 
@@ -137,34 +137,34 @@ void hashmap_free(hashmap* h){
     // for hashmaps with heap allocated structs
     if (h->free_entry != NULL) {
         for (int i = 0; i < h->capacity; i++) {
-            Map_hashed_position* entry_ptr = &h->map_entries[i];
+            map_slot* entry_ptr = &h->slots[i];
             bool is_empty_entry = entry_ptr->length == 0;
             if (!is_empty_entry) {
                 for (int entry = 0; entry < entry_ptr->length; entry++) {
-                    h->free_entry(&entry_ptr->collisions[entry]);
-                    Key k = entry_ptr->collisions[entry].key;
+                    h->free_entry(&entry_ptr->entries[entry]);
+                    Key k = entry_ptr->entries[entry].key;
                     free(k.bytes);
                 }
-                free(entry_ptr->collisions);
+                free(entry_ptr->entries);
             }
         }
-        free(h->map_entries);
+        free(h->slots);
         free(h);
         return;
     }
     // for hashmaps with primitive values stored as cast (void*) pointers
     for (int i = 0; i < h->capacity; i++) {
-        Map_hashed_position* entry_ptr = &h->map_entries[i];
+        map_slot* entry_ptr = &h->slots[i];
         bool is_empty_entry = entry_ptr->length == 0;
         if (!is_empty_entry) {
             for (int entry = 0; entry < entry_ptr->length; entry++) {
-                Key k = entry_ptr->collisions[entry].key;
+                Key k = entry_ptr->entries[entry].key;
                 free(k.bytes);
             }
-            free(entry_ptr->collisions);
+            free(entry_ptr->entries);
         }
     }
-    free(h->map_entries);
+    free(h->slots);
     free(h);
 }
 
@@ -208,10 +208,10 @@ result hashmap_get(hashmap* h, void* key){
 
     size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
 
-    Map_hashed_position hashed_position = h->map_entries[index];
+    map_slot hashed_position = h->slots[index];
 
     for (int i = 0; i < hashed_position.length; i++) {
-        Map_KV item =  hashed_position.collisions[i];
+        map_entry item =  hashed_position.entries[i];
         if (compare_key(converted_key, item.key)) {
             free(converted_key.bytes);
             return ( result ) {true,item.value};
@@ -225,44 +225,39 @@ result hashmap_get(hashmap* h, void* key){
 //returns false if expansion fails
 bool hashmap_expand(hashmap* h){
     size_t new_capacity = h->capacity * 2;
-    Map_hashed_position* new_entries = calloc(new_capacity, sizeof(Map_hashed_position));
+    map_slot* new_entries = calloc(new_capacity, sizeof(map_slot));
     if (new_entries == NULL) {
         return false; 
     }
     for (int i = 0 ; i < h->capacity; i++) {
-        Map_hashed_position item = h->map_entries[i];
+        map_slot item = h->slots[i];
         for (int j = 0; j < item.length; j++) {
-            uint64_t hash = Key_hash(item.collisions[j].key);
+            uint64_t hash = Key_hash(item.entries[j].key);
 
             size_t index = (size_t)(hash & (uint64_t)(new_capacity - 1));
 
-            Map_hashed_position* hased_position = &new_entries[index];
+            map_slot* hased_position = &new_entries[index];
 
             hased_position->length++;
             if (hased_position->length == 1) {
-                hased_position->collisions = malloc(sizeof(Map_KV));
+                hased_position->entries = malloc(sizeof(map_entry));
             }else {
-                hased_position->collisions = realloc(hased_position->collisions, sizeof(Map_KV)*hased_position->length);
+                hased_position->entries = realloc(hased_position->entries, sizeof(map_entry)*hased_position->length);
             }
 
-            hased_position->collisions[hased_position->length-1] = item.collisions[j];
+            hased_position->entries[hased_position->length-1] = item.entries[j];
         }
     }
 
     for (int i = 0; i < h->capacity; i++) {
-        Map_hashed_position* entry_ptr = &h->map_entries[i];
+        map_slot* entry_ptr = &h->slots[i];
         bool is_empty_entry = entry_ptr->length == 0;
         if (!is_empty_entry) {
-            for (int entry = 0; entry < entry_ptr->length; entry++) {
-                if (h->free_entry != NULL) {
-                    h->free_entry(&entry_ptr->collisions[entry]);
-                }
-            }
-            free(entry_ptr->collisions);
+            free(entry_ptr->entries);
         }
     }
-    free(h->map_entries);
-    h->map_entries = new_entries;
+    free(h->slots);
+    h->slots = new_entries;
     h->capacity = new_capacity;
     return true;
 
@@ -280,9 +275,9 @@ bool hashmap_set(hashmap* h, void* key, void* value){
 
     size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
 
-    Map_hashed_position* hased_position = &h->map_entries[index];
+    map_slot* hased_position = &h->slots[index];
     for (int i = 0; i < hased_position->length; i++) {
-        Map_KV* item = &hased_position->collisions[i];
+        map_entry* item = &hased_position->entries[i];
         if (compare_key(converted_key, item->key)) {
             item->value = value;
             free(converted_key.bytes);
@@ -292,15 +287,15 @@ bool hashmap_set(hashmap* h, void* key, void* value){
 
     //if key is not found
     h->length++;
-    Map_KV item = {converted_key,value};
+    map_entry item = {converted_key,value};
     hased_position->length++;
     if (hased_position->length == 1) {
-        hased_position->collisions = malloc(sizeof(Map_KV));
+        hased_position->entries = malloc(sizeof(map_entry));
     }else {
-        hased_position->collisions = realloc(hased_position->collisions, sizeof(Map_KV)*hased_position->length);
+        hased_position->entries = realloc(hased_position->entries, sizeof(map_entry)*hased_position->length);
     }
 
-    hased_position->collisions[hased_position->length-1] = item;
+    hased_position->entries[hased_position->length-1] = item;
     return true;
 }
 
@@ -321,7 +316,7 @@ typedef struct{
     int pos[2];
 }path_track ;
 
-void free_path_track(Map_KV* slot){
+void free_path_track(map_entry* slot){
     free(slot->value);
 }
 
@@ -332,7 +327,7 @@ path_track* new_path_item(int pos[2]){
     return item;
 }
 
-#define TESTING
+// #define TESTING
 #ifdef TESTING
     #define SQR_SIZE 7
     #define INPUT "test.txt"
@@ -396,7 +391,6 @@ int main(){
             line_end = strchr(line_end+1, '\n');
         }
     }
-    printGrid(memory);
 
     /* A* setup*/
     minheap pq = new_minheap();
@@ -439,8 +433,8 @@ int main(){
             result next_distance = hashmap_get(distances, next_pos);
 
             if (!next_distance.found || predicted_distance < (uint64_t)next_distance.value ) {
-                uint64_t adjusted_weight = distance(next_pos,current_pos.pos);
-                mhitem next_frontier = {adjusted_weight,{next_pos[0],next_pos[1]}};
+                // uint64_t adjusted_weight = distance(next_pos,current_pos.pos);
+                mhitem next_frontier = {predicted_distance,{next_pos[0],next_pos[1]}};
 
                 minheap_insert(&pq, next_frontier);
 
