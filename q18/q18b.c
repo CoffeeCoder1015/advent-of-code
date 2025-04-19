@@ -448,29 +448,11 @@ int main(){
         }
     }
     
-    /* Path construction && Answer calculation */
-    int min_steps = 1; // end square is not counted as we start from it
-
     int ending_position[2] = {square_size-1,square_size-1};
-    int* last_pos = hashmap_get(camefrom,ending_position).value;
-    for (;;) {
-        bool x_eq = last_pos[0] == start_position[0];
-        bool y_eq = last_pos[1] == start_position[1];
-        if (x_eq&&y_eq) {
-            break;
-        } 
+    result r_last_dist = hashmap_get(distances,ending_position);
+    uint64_t last_dist = (uint64_t)r_last_dist.value;
+    printf("%llu\n",last_dist);
 
-        min_steps++;
-
-        // visualisation
-        int last_index = last_pos[1]*square_size+last_pos[0];
-        memory[last_index] = 2;
-
-        last_pos = hashmap_get(camefrom, last_pos).value;
-    }
-
-    printGrid(memory);
-    printf("%d\n",min_steps);
     /* A* cleanup */
     free_minheap(&pq);
     hashmap_free(distances);
