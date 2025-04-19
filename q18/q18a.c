@@ -347,12 +347,18 @@ int square_size = SQR_SIZE;
 char gridAtlas[] = ".#O";
 
 void printGrid(int* grid){
+    int size =square_size*(square_size+1);
+    char* vmap = malloc(size+1);
+    vmap[0] = '\0';
     for (int i = 0; i < square_size*square_size; i++) {
-        printf("%c",gridAtlas[grid[i]]);
+        char cat_obj[] = {gridAtlas[grid[i]],'\0'};
+        strcat_s(vmap,size+1,cat_obj);
         if ((i+1)%square_size == 0) {
-            printf("\n");
+            strcat_s(vmap,size+1,"\n");
         }
     }
+    vmap[size] = '\0';
+    printf("%s\n",vmap);
 }
 
 uint64_t distance(int pos1[2], int pos2[2]){
