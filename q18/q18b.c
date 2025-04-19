@@ -459,7 +459,67 @@ int main(){
         }
     }
 
-    result r = a_star_search(memory);
+    //loading the rest of the coordinates
+    int alloc_size = 100;
+    int size = 0;
+    int (*remaining)[2] = malloc(alloc_size*sizeof(int[2]));
+    for (;;) {
+        if (line_end == NULL) {
+            break; 
+        }
+        char* sep = strchr(line_start, ',');
+        *sep = '\0';
+        int x = atoi(line_start);
+        *line_end = '\0';
+        int y = atoi(sep+1);
+
+        if (size >= alloc_size) {
+            alloc_size+=100; 
+            int (*new_remaining)[2] = realloc(remaining, sizeof(int[2])*alloc_size);
+            remaining = new_remaining;
+        }
+
+        size++;
+        remaining[size-1][0] = x;
+        remaining[size-1][1] = y;
+
+        line_start = line_end+1;
+        line_end = strchr(line_end+1, '\n');
+    }
+    remaining = realloc(remaining, sizeof(int[2])*size);
+
+    int low = 0;
+    int high = size-1;
+    int mid = ( low+high )/2;
+
+    while (true){
+        for (int i = low; i <= mid; i++) {
+            int x = remaining[i][0];
+            int y = remaining[i][1];
+            memory[y*(square_size)+x] = 1;
+        }
+
+        if (low == high) {
+            printf("%d,%d\n",remaining[low][0],remaining[low][1]);
+            break; 
+        }
+
+        result r = a_star_search(memory);
+        if (r.found) {
+            low = mid+1; 
+            mid = (low+high)/2;
+        }else {
+            // unrolling the memory so it can start again.
+            for (int i = low; i <= mid; i++) {
+                int x = remaining[i][0];
+                int y = remaining[i][1];
+                memory[y*(square_size)+x] = 0;
+            }
+            high = mid-1;
+            mid = (low+high)/2;
+
+        }
+    }
 
     free(raw_coords);
 }
