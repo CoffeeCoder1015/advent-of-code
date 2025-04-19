@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,6 +94,199 @@ mhitem minheap_extract(minheap* mh){
     return item;
 }
 
+
+typedef struct{
+    int length;
+    int8_t* bytes;
+} Key;
+
+typedef struct{
+    Key key;
+    void* value;
+} Map_KV;
+
+typedef struct{
+    Map_KV* collisions;
+    int length;
+} Map_hashed_position;
+
+typedef struct{
+    Map_hashed_position* map_entries;
+    int length;
+    int capacity;
+    //used to free the indivual values in kv pairs
+    //set to NULL if void* value does not actually point to a heap allocated resource
+    void (*free_entry)(Map_KV*);
+    // used to convert a general datatype into a Key object
+    Key (*to_key)(void*);
+} hashmap;
+
+#define INIT_CAPACITY 6400
+hashmap* hashmap_new(void (*free_function)(Map_KV*), Key (*to_key)(void*)){
+    hashmap* h = malloc(sizeof(hashmap));
+    h->length = 0;
+    h->capacity = INIT_CAPACITY;
+    h->free_entry = free_function;
+    h->to_key = to_key;
+
+    h->map_entries = calloc(h->capacity, sizeof(Map_hashed_position));
+    return h;
+}
+
+void hashmap_free(hashmap* h){
+    // for hashmaps with heap allocated structs
+    if (h->free_entry != NULL) {
+        for (int i = 0; i < h->capacity; i++) {
+            Map_hashed_position* entry_ptr = &h->map_entries[i];
+            bool is_empty_entry = entry_ptr->length == 0;
+            if (!is_empty_entry) {
+                for (int entry = 0; entry < entry_ptr->length; entry++) {
+                    h->free_entry(&entry_ptr->collisions[entry]);
+                    Key k = entry_ptr->collisions[entry].key;
+                    free(k.bytes);
+                }
+                free(entry_ptr->collisions);
+            }
+        }
+        return;
+    }
+    // for hashmaps with primitive values stored as cast (void*) pointers
+    for (int i = 0; i < h->capacity; i++) {
+        Map_hashed_position* entry_ptr = &h->map_entries[i];
+        bool is_empty_entry = entry_ptr->length == 0;
+        if (!is_empty_entry) {
+            for (int entry = 0; entry < entry_ptr->length; entry++) {
+                Key k = entry_ptr->collisions[entry].key;
+                free(k.bytes);
+            }
+            free(entry_ptr->collisions);
+        }
+    }
+}
+
+#define FNV_OFFSET 14695981039346656037UL
+#define FNV_PRIME 1099511628211UL
+uint64_t Key_hash(Key key){
+    uint64_t hash = FNV_OFFSET;
+    for (int i= 0; i < key.length; i++) {
+        uint8_t byte_of_data = key.bytes[i];
+        hash *= FNV_PRIME;
+        hash ^= byte_of_data;
+    }
+    return hash;
+}
+
+Key new_key(int bytes){
+    Key k = { bytes, malloc(sizeof(int8_t)*bytes) };
+    return k;
+}
+
+bool compare_key(Key key1, Key key2){
+    if (key1.length != key2.length) {
+        return false;
+    }
+    for (int i = 0; i < key1.length; i++) {
+        if (key1.bytes[i]!=key2.bytes[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+typedef struct{
+    bool found;
+    void* value;
+} result;
+
+result hashmap_get(hashmap* h, void* key){
+    Key converted_key = h->to_key(key);
+    uint64_t hash = Key_hash(converted_key);
+
+    size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
+
+    Map_hashed_position hashed_position = h->map_entries[index];
+
+    for (int i = 0; i < hashed_position.length; i++) {
+        Map_KV item =  hashed_position.collisions[i];
+        if (compare_key(converted_key, item.key)) {
+            free(converted_key.bytes);
+            return ( result ) {true,item.value};
+        }
+    }
+
+    free(converted_key.bytes);
+    return (result){false,NULL};
+}
+//returns true if expansion is succsessful
+//returns false if expansion fails
+bool hashmap_expand(hashmap* h){
+    size_t new_capacity = h->capacity * 2;
+    Map_hashed_position* new_entries = calloc(new_capacity, sizeof(Map_hashed_position));
+    if (new_entries == NULL) {
+        return false; 
+    }
+    for (int i = 0 ; i < h->capacity; i++) {
+        Map_hashed_position item = h->map_entries[i];
+        for (int j = 0; j < item.length; j++) {
+            uint64_t hash = Key_hash(item.collisions[j].key);
+
+            size_t index = (size_t)(hash & (uint64_t)(new_capacity - 1));
+
+            Map_hashed_position* hased_position = &new_entries[index];
+
+            hased_position->length++;
+            if (hased_position->length == 1) {
+                hased_position->collisions = malloc(sizeof(Map_KV));
+            }else {
+                hased_position->collisions = realloc(hased_position->collisions, sizeof(Map_KV)*hased_position->length);
+            }
+
+            hased_position->collisions[hased_position->length-1] = item.collisions[j];
+        }
+    }
+
+    free(h->map_entries);
+    h->map_entries = new_entries;
+    h->capacity = new_capacity;
+    return true;
+
+}
+
+bool hashmap_set(hashmap* h, void* key, void* value){
+    if (h->length >= h->capacity / 2) {
+        if (!hashmap_expand(h)) {
+            return false; 
+        }
+    }
+
+    Key converted_key = h->to_key(key);
+    uint64_t hash = Key_hash(converted_key);
+
+    size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
+
+    Map_hashed_position* hased_position = &h->map_entries[index];
+    for (int i = 0; i < hased_position->length; i++) {
+        Map_KV* item = &hased_position->collisions[i];
+        if (compare_key(converted_key, item->key)) {
+            item->value = value;
+            free(converted_key.bytes);
+            return true;
+        }    
+    }
+
+    //if key is not found
+    h->length++;
+    Map_KV item = {converted_key,value};
+    hased_position->length++;
+    if (hased_position->length == 1) {
+        hased_position->collisions = malloc(sizeof(Map_KV));
+    }else {
+        hased_position->collisions = realloc(hased_position->collisions, sizeof(Map_KV)*hased_position->length);
+    }
+
+    hased_position->collisions[hased_position->length-1] = item;
+    return true;
+}
 
 #define TESTING
 #ifdef TESTING
