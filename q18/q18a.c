@@ -448,7 +448,9 @@ int main(){
         }
     }
     
-    /* Path construction */
+    /* Path construction && Answer calculation */
+    int min_steps = 1; // end square is not counted as we start from it
+
     int ending_position[2] = {square_size-1,square_size-1};
     int* last_pos = hashmap_get(camefrom,ending_position).value;
     for (;;) {
@@ -458,14 +460,17 @@ int main(){
             break;
         } 
 
-        int last_index = last_pos[1]*square_size+last_pos[0];
+        min_steps++;
 
         // visualisation
+        int last_index = last_pos[1]*square_size+last_pos[0];
         memory[last_index] = 2;
+
         last_pos = hashmap_get(camefrom, last_pos).value;
     }
 
     printGrid(memory);
+    printf("%d\n",min_steps);
     /* A* cleanup */
     free_minheap(&pq);
     hashmap_free(distances);
