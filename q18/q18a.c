@@ -304,6 +304,34 @@ bool hashmap_set(hashmap* h, void* key, void* value){
     return true;
 }
 
+Key pos_to_key(void* pos_genric){
+    int32_t* pos = pos_genric;
+    Key k = new_key(8);
+
+    uint64_t combined = (uint64_t)pos[0] << 32;
+    combined |= pos[1];
+    for (int i = 0;  i < 8; i++) {
+        uint8_t byte_of_data = ( combined >> (i * 8) ) & 255; // grabs 8 bit slices out of the data
+        k.bytes[i] = byte_of_data;
+    }
+    return k;
+}
+
+typedef struct{
+    int pos[2];
+}path_track ;
+
+void free_path_track(Map_KV* slot){
+    free(slot->value);
+}
+
+path_track* new_path_item(int pos[2]){
+    path_track* item = malloc(sizeof(path_track));
+    item->pos[0] = pos[0];
+    item->pos[1] = pos[1];
+    return item;
+}
+
 #define TESTING
 #ifdef TESTING
     #define SQR_SIZE 7
@@ -360,5 +388,26 @@ int main(){
         }
     }
     printGrid(memory);
+
+    /* A* setup*/
+    minheap pq = new_minheap();
+    hashmap* distances = hashmap_new(NULL, pos_to_key);
+    hashmap* camefrom = hashmap_new(free_path_track, pos_to_key);
+
+    /* inserting initial values */
+    mhitem start_item = {0,{0,0}};
+    minheap_insert(&pq, start_item);
+
+    int start_position[2] = {0,0};
+    hashmap_set(distances, start_position, 0);
+    hashmap_set(camefrom, start_position, new_path_item(start_position));
+
+    /* A* path finding */
+
+
+    /* A* cleanup */
+    free_minheap(&pq);
+    hashmap_free(distances);
+    hashmap_free(camefrom);
     free(raw_coords);
 }
