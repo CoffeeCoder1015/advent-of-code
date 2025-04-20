@@ -96,6 +96,29 @@ bool yield_trie_check(trie** t_yield, char check){
     }
 }
 
+void free_trie(trie* t){
+    int stack_size = 0;
+    trie** t_stack = malloc(0);
+    for (int i = 0; i < 26; i++) {
+        if ( t->child[i] != NULL ) {
+            stack_size++;
+            t_stack = realloc( t_stack,sizeof(trie*)*stack_size );
+            t_stack[stack_size-1] = t->child[i];
+        }
+    }
+    while (stack_size > 0) {
+        stack_size--;
+        trie* current = t_stack[stack_size];
+        for (int i = 0; i < 26; i++) {
+            if ( current->child[i] != NULL ) {
+                stack_size++;
+                t_stack = realloc( t_stack,sizeof(trie*)*stack_size );
+                t_stack[stack_size-1] = current->child[i];
+            }
+        }
+        free_trie(current);
+    }
+}
 
 int main() {
     FILE *inputs;
@@ -169,6 +192,6 @@ int main() {
         free(visited);
     }
 
-    //free trie
     printf("%d\n",amount_possible);
+    free_trie(&t);
 }
