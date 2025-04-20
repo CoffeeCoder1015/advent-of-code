@@ -116,6 +116,8 @@ int main() {
     }
     free(raw_split);
 
+    int amount_possible = 0;
+
     char buffer[1024];
     fgets(buffer, 1024, inputs); // consumes the empty lines 
     for (;;) {
@@ -136,7 +138,7 @@ int main() {
             stack_size--;
             int index = index_stack[stack_size];
             if (index == buff_n) {
-                // its possible!
+                amount_possible++;
                 break; 
             }
             // generating "neighbour" by consuming valid prefixes and appending respective indexes
@@ -166,4 +168,7 @@ int main() {
         free(index_stack);
         free(visited);
     }
+
+    //free trie
+    printf("%d\n",amount_possible);
 }
