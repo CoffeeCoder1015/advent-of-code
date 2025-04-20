@@ -129,6 +129,7 @@ int main() {
 
         // DFS through all possible combinations
         int stack_size = 1;
+        int* visited = calloc(1+buff_n,sizeof(int));
         int* index_stack = malloc(sizeof(int));
         index_stack[0] = 0;
         while (stack_size > 0) {
@@ -152,12 +153,17 @@ int main() {
                     break; 
                 }
                 if (search_start->isend) {
-                    // append index to stack
-                    stack_size++;
-                    index_stack = realloc(index_stack, sizeof(int)*stack_size);
-                    index_stack[stack_size-1] = i+1+index;
+                    int next_index = index+i+1;
+                    if (!visited[next_index]) {
+                        stack_size++;
+                        index_stack = realloc(index_stack, sizeof(int)*stack_size);
+                        index_stack[stack_size-1] = next_index;
+                        visited[next_index] = 1;
+                    }
                 }
             }
         }
+        free(index_stack);
+        free(visited);
     }
 }
