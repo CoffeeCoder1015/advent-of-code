@@ -490,36 +490,33 @@ int main(){
 
     int low = 0;
     int high = size-1;
-    int mid = ( low+high )/2;
 
-    while (true){
+    int mid = ( low+high )/2;
+    while (low<=high){
+        mid = ( low+high )/2;
+        if (low == high) {
+            break; 
+        }
         for (int i = low; i <= mid; i++) {
             int x = remaining[i][0];
             int y = remaining[i][1];
             memory[y*(square_size)+x] = 1;
         }
-
-        if (low == high) {
-            printf("%d,%d\n",remaining[low][0],remaining[low][1]);
-            break; 
-        }
-
         result r = a_star_search(memory);
         if (r.found) {
             low = mid+1; 
-            mid = (low+high)/2;
         }else {
+            high = mid; // not mid-1 because if A* fails the mid point can actually be correct
             // unrolling the memory so it can start again.
             for (int i = low; i <= mid; i++) {
                 int x = remaining[i][0];
                 int y = remaining[i][1];
                 memory[y*(square_size)+x] = 0;
             }
-            high = mid-1;
-            mid = (low+high)/2;
-
         }
     }
-
+    printf("%d,%d",remaining[mid][0],remaining[mid][1]);
+    free(memory);
+    free(remaining);
     free(raw_coords);
 }
