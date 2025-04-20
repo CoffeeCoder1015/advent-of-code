@@ -99,9 +99,9 @@ bool yield_trie_check(trie** t_yield, char check){
 
 int main() {
     FILE *inputs;
-    fopen_s(&inputs, "test.txt", "r");
-    char raw_substr[1024];
-    fgets(raw_substr, 1024, inputs);
+    fopen_s(&inputs, "q19.txt", "r");
+    char raw_substr[4096];
+    fgets(raw_substr, 4096, inputs);
 
     int raw_str_n = strlen(raw_substr);
     raw_substr[raw_str_n-1] = '\0'; // removes trailing \n
