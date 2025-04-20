@@ -66,17 +66,20 @@ trie* make_node(){
 
 void trie_insert(trie* t, char* string){
     int n = strlen(string);
-    trie* current_node = t;
+    trie* base_node = t;
     for (int i = 0; i < n; i++) {
         int current_index = string[i] - 'a';
-        trie** next_node = &current_node->child[current_index];
-        if (*next_node == NULL) {
+        trie** current_node = &base_node->child[current_index];
+        if (*current_node == NULL) {
             trie* new_node = make_node();
             new_node->isend = i+1 == n;
-            *next_node = new_node ;
-            current_node = new_node;
+            *current_node = new_node ;
+            base_node = new_node;
         }else {
-            current_node = *next_node;
+            if (i+1 == n) {
+                ( *current_node )->isend = true;
+            }
+            base_node = *current_node;
         }
     }
 }
