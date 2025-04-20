@@ -59,7 +59,6 @@ trie make_root(){
 }
 
 trie* make_node(){
-    printf("t made!\n");
     trie* t = malloc(sizeof(trie));
     memset(t->child, 0, sizeof(trie*)*26);
     return t;
@@ -90,7 +89,7 @@ bool yield_trie_check(trie** t_yield, char check){
     if (next_node != NULL) {
         return true;  
     }else {
-        return next_node->isend;
+        return false;
     }
 }
 
@@ -121,6 +120,41 @@ int main() {
         if (fg == NULL) {
             break;
         }
-        printf("%s", buffer);
+        int buff_n = strlen(buffer);
+        buffer[buff_n-1] = '\0';
+        buff_n--;
+
+        // DFS through all possible combinations
+        int stack_size = 1;
+        int* index_stack = malloc(sizeof(int));
+        index_stack[0] = 0;
+        while (stack_size > 0) {
+            stack_size--;
+            int index = index_stack[stack_size];
+            if (index == buff_n) {
+                // its possible!
+                break; 
+            }
+            // generating "neighbour" by consuming valid prefixes and appending respective indexes
+            // as next location to process.
+            //
+            // If next location (index) is equal to the length of the original string (not suffix string)
+            // then a combination has been found!
+            char* suffix = &buffer[index];
+            int n_suffix = strlen(suffix);
+            trie* search_start = &t;
+            for (int i = 0; i < n_suffix; i++) {
+                bool r = yield_trie_check(&search_start, suffix[i]);
+                if (search_start == NULL) {
+                    break; 
+                }
+                if (search_start->isend) {
+                    // append index to stack
+                    stack_size++;
+                    index_stack = realloc(index_stack, sizeof(int)*stack_size);
+                    index_stack[stack_size-1] = i+1+index;
+                }
+            }
+        }
     }
 }
