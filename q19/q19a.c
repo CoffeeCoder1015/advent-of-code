@@ -27,7 +27,7 @@ char** inplace_split(char* string, char* sep){
 
         array_size++;
         str_array[0]++;
-        if (array_size > array_capacity) {
+        if (array_size >= array_capacity) {
             array_capacity+=4;
             str_array = realloc(str_array, sizeof(char*)*array_capacity);
         }
