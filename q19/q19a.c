@@ -47,46 +47,51 @@ char** inplace_split(char* string, char* sep){
 
 // store = array of all characters
 // map   = contains the pointer directions to make store function as a trie
-typedef struct{
-    int n;
-    int (*map)[26];
-} trie;
+typedef struct trie trie;
 
-trie new_trie(){
-    trie t = {1,calloc(1,sizeof(int[26]))};
+struct trie{
+    bool isend;
+    trie* child[26];
+};
+
+trie make_root(){
+    return (trie){false};
+}
+
+trie* make_node(){
+    printf("t made!\n");
+    trie* t = malloc(sizeof(trie));
+    memset(t->child, 0, sizeof(trie*)*26);
     return t;
 }
 
-void insert_trie(trie* t, char* string){
-    int trie_index = 0;
+void trie_insert(trie* t, char* string){
     int n = strlen(string);
+    trie* current_node = t;
     for (int i = 0; i < n; i++) {
-        int current_index = string[i]-'a';
-        int next_index = string[i+1]-'a';
-
-        int mapping = t->map[trie_index][current_index];
-        if (mapping == 0) {
-            if (next_index < 0) {
-                t->map[trie_index][current_index] = -1; //termination character
-            }else{
-                // create new mapping 
-                int new_size = t->n+1;
-                int (*new_map)[26] = calloc(new_size , sizeof(int[26]));
-                memcpy_s(new_map, new_size*sizeof(int[26]), t->map, t->n*sizeof(int[26]));
-                free(t->map);
-                t->map = new_map;
-                t->map[trie_index][current_index] = t->n; // map to next node
-                t->n = new_size;
-            }
+        int current_index = string[i] - 'a';
+        trie** next_node = &current_node->child[current_index];
+        if (*next_node == NULL) {
+            trie* new_node = make_node();
+            new_node->isend = i+1 == n;
+            *next_node = new_node ;
+            current_node = new_node;
         }else {
-            trie_index = mapping;
+            current_node = *next_node;
         }
     }
 }
 
-int check_trie(trie* t,int offset, char character){
-    int char_index = character-'a';
-    return t->map[offset][char_index];
+bool yield_trie_check(trie** t_yield, char check){
+    trie* t = *t_yield;
+    int check_index = check-'a';
+    trie* next_node = t->child[check_index];
+    *t_yield = next_node;
+    if (next_node != NULL) {
+        return true;  
+    }else {
+        return next_node->isend;
+    }
 }
 
 
