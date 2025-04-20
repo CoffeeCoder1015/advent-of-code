@@ -107,8 +107,10 @@ int main() {
     char** raw_split = inplace_split(raw_substr, ", ");
     size_t n_split = (size_t)raw_split[0];
     char** split = &raw_split[1];
+
+    trie t = make_root();
     for (int i = 0; i < n_split; i++) {
-        printf("%s\n",split[i]);
+        trie_insert(&t, split[i]);
     }
     free(raw_split);
 
