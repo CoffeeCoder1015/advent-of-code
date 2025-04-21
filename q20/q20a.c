@@ -1,9 +1,9 @@
-#include <corecrt_search.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct{
     int weight;
@@ -308,6 +308,27 @@ int main(){
     fread(map, sizeof(char) , file_size, input);
     map[file_size-1] = '\0';
     fclose(input);
+
+    char* line_end = strchr(map, '\n');
+    int x_size = line_end-map-1;
+    int y_size = 1;
+    int start[2] = {0,0};
+    int end[2] = {0,0};
+    while (line_end != NULL) {
+        char* s_char = strchr(line_end, 'S');
+        if (s_char != NULL) {
+            start[0] = s_char-line_end-1;
+            start[1] = y_size;
+        }
+        char* e_char = strchr(line_end, 'E');
+        if (e_char != NULL) {
+            end[0] = e_char-line_end-1;
+            end[1] = y_size;
+        }
+        y_size++; 
+        line_end = strchr(line_end+1,'\n');
+    }
+    printf("%d,%d %d,%d Size:%d,%d\n",start[0],start[1],end[0],end[1],x_size,y_size);
 
     printf("%s\n",map);
 
