@@ -154,7 +154,6 @@ int main() {
 
         // DFS through all possible combinations
         int stack_size = 1;
-        int* visited = calloc(1+buff_n,sizeof(int));
         int* index_stack = malloc(sizeof(int));
         index_stack[0] = 0;
         while (stack_size > 0) {
@@ -179,17 +178,13 @@ int main() {
                 }
                 if (search_start->isend) {
                     int next_index = index+i+1;
-                    if (!visited[next_index]) {
-                        stack_size++;
-                        index_stack = realloc(index_stack, sizeof(int)*stack_size);
-                        index_stack[stack_size-1] = next_index;
-                        visited[next_index] = 1;
-                    }
+                    stack_size++;
+                    index_stack = realloc(index_stack, sizeof(int)*stack_size);
+                    index_stack[stack_size-1] = next_index;
                 }
             }
         }
         free(index_stack);
-        free(visited);
     }
 
     printf("%d\n",amount_possible);
