@@ -364,7 +364,7 @@ int main(){
 
     int capacity = 20;
     int size = 0;
-    int (*path_array)[2] = malloc(0);
+    int (*path_array)[2] = malloc(capacity*sizeof(int[2]));
 
     for (;;) {
         // constructing an ordered array of path around the track 
@@ -395,6 +395,7 @@ int main(){
                 next_pos[1] = current_pos[1]+new_direction[1];
                 next_index = next_pos[1]*(x_size+1)+next_pos[0];
                 if (map[next_index] == '.') {
+                    current_dir = dir_index;
                     break;
                 }
             }
