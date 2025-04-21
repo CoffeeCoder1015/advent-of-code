@@ -354,7 +354,10 @@ int main(){
         line_end = strchr(line_end+1,'\n');
     }
     printf("%d,%d %d,%d Size:%d,%d\n",start_pos[0],start_pos[1],end_pos[0],end_pos[1],x_size,y_size);
+    printf("\033[2J");
+    printf("\033[H");
 
+    char* dir_glyph = ">v<^";
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
     int current_dir = 0;
     int current_pos[2] = {start_pos[0],start_pos[1]};
@@ -390,12 +393,20 @@ int main(){
                 int* new_direction = directions[dir_index];
                 next_pos[0] = current_pos[0]+new_direction[0];
                 next_pos[1] = current_pos[1]+new_direction[1];
-                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+                next_index = next_pos[1]*(x_size+1)+next_pos[0];
                 if (map[next_index] == '.') {
                     break;
                 }
             }
         }
+
+        // visualisations
+        map[next_index] = 'O';
+        printf("\033[3J");
+        printf("%s %c %d",map,dir_glyph[current_dir],size);
+        printf("\033[H");
+
+
         // setting next point to process
         current_pos[0] = next_pos[0];
         current_pos[1] = next_pos[1];
