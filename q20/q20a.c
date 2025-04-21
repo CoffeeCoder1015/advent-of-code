@@ -1,7 +1,5 @@
 #include <math.h>
-#include <stdatomic.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -235,7 +233,7 @@ int modulo(int x, int y){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "test.txt", "rb");
+    fopen_s(&input, "q20.txt", "rb");
 
     fseek(input, 0, SEEK_END);
     size_t file_size = ftell(input);
@@ -265,9 +263,6 @@ int main(){
         }
         line_end = strchr(line_end+1,'\n');
     }
-    printf("%d,%d %d,%d Size:%d,%d\n",start_pos[0],start_pos[1],end_pos[0],end_pos[1],x_size,y_size);
-    printf("\033[2J");
-    printf("\033[H");
 
     char* dir_glyph = ">v<^";
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
@@ -317,13 +312,6 @@ int main(){
                 }
             }
         }
-
-        // visualisations
-        map[next_index] = 'O';
-        printf("\033[3J");
-        printf("%s %c %d",map,dir_glyph[current_dir],size);
-        printf("\033[H");
-
 
         // setting next point to process
         current_pos[0] = next_pos[0];
