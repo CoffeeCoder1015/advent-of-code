@@ -321,15 +321,16 @@ int main(){
 
     char* map = malloc(file_size);
     fread(map, sizeof(char) , file_size, input);
-    map[file_size-1] = '\0';
+    map[file_size] = '\0';
     fclose(input);
 
     char* line_end = strchr(map, '\n');
-    int x_size = line_end-map-1;
-    int y_size = 1;
+    int x_size = line_end-map;
+    int y_size = 0;
     int start_pos[2] = {0,0};
     int end_pos[2] = {0,0};
     while (line_end != NULL) {
+        y_size++; 
         char* s_char = strchr(line_end, 'S');
         if (s_char != NULL) {
             start_pos[0] = s_char-line_end-1;
@@ -340,7 +341,6 @@ int main(){
             end_pos[0] = e_char-line_end-1;
             end_pos[1] = y_size;
         }
-        y_size++; 
         line_end = strchr(line_end+1,'\n');
     }
     printf("%d,%d %d,%d Size:%d,%d\n",start_pos[0],start_pos[1],end_pos[0],end_pos[1],x_size,y_size);
