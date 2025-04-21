@@ -154,6 +154,17 @@ int main() {
             buff_n--;
         }
 
+        // The original DFS is now used to find the possible amounts in a suffix string
+        // In its place, the program loop backwards to construct the combinations for the smallest suffix.
+        // The possible combination of the suffixes are stored in the memoizer.
+        //
+        // 1. It loops backwards so the total sum can be propagated correctly to obtain the correct answer.
+        //
+        // 2. In order to obtain all combinations, the "loop guard" is removed from the DFS search
+        //  - This is to make sure all combinations are visited and that they are not ignored because they were visited before. 
+        //  - However this would means the DFS stack can blow up in size causing the program to essentially halt .
+        //  - The memoizer is used so the DFS will simply use the already value calculated from previous iterations. 
+        //  - This also means the DFS wont be stuck because already visited nodes will not be appended to the stack again.
         size_t* memoizer = malloc(( buff_n+1 )*sizeof(size_t));
         memset(memoizer, -1,( buff_n+1 )*sizeof(size_t));
         
@@ -187,11 +198,11 @@ int main() {
                     }
                     if (search_start->isend) {
                         int next_index = index+i+1;
-                        if (memoizer[next_index] == -1) {
+                        if (memoizer[next_index] == -1) { // if target location has not been searched
                             stack_size++;
                             index_stack = realloc(index_stack, sizeof(int)*stack_size);
                             index_stack[stack_size-1] = next_index;
-                        }else {
+                        }else { // location is searched before, recycle calculated value!
                             local_possible += memoizer[next_index];
                         }
                     }
