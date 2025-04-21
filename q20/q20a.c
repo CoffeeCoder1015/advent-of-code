@@ -366,7 +366,12 @@ int main(){
     int size = 0;
     int (*path_array)[2] = malloc(capacity*sizeof(int[2]));
 
+    hashmap* distances = hashmap_new(NULL, pos_to_key);
+
     for (;;) {
+        // recording all the distances for fast query
+        hashmap_set(distances, current_pos, (void*)(uint64_t)size);
+
         // constructing an ordered array of path around the track 
         path_array[size][0] = current_pos[0];
         path_array[size][1] = current_pos[1];
@@ -418,8 +423,54 @@ int main(){
         path_array = realloc(path_array, size*sizeof(int[2]));
     }
 
+    // calculating skip times
+    //
+    // Covolution pattern:
+    //
+    //     X
+    //     #
+    //   X#O#X
+    //     #
+    //     X
+    //
+    // O = current positon
+    // X = skipable positions to check
+    // # = where walls should be
+    
+    for (int i = 0; i < size; i++) {
+        int* current_pos = path_array[i];
+        int current_index = current_pos[1]*(x_size+1)+current_pos[0];
+        for (int d_idx = 0; d_idx < 4; d_idx++) {
+            int* direction = directions[d_idx];
+            int wall_check[2] = {current_pos[0]+direction[0],current_pos[1]+direction[1]};
+            int target_position[2] = {current_pos[0]+2*direction[0],current_pos[1]+2*direction[1]};
 
-    printf("%s",map);
+            bool x_in = 0 <= target_position[0] && target_position[0] < x_size;
+            bool y_in = 0 <= target_position[1] && target_position[1] < y_size;
+            if (!( x_in && y_in )) {
+                continue; 
+            }
 
+            int target_index = target_position[1]*(x_size+1)+target_position[0];
+            int wall_index = wall_check[1]*(x_size+1)+wall_check[0];
+            if( map[wall_index] == '#' && map[target_index] == '.' || map[target_index] == 'E'){ // valid skip
+                // int dist_to_here = i;
+                int dist_to_target = (uint64_t)hashmap_get(distances, target_position).value;
+                int dist_from_here_to_target = dist_to_target-i; // dist to `here` is just i
+
+                // dist between `target` and `here` after skip is 2
+                int dist_skipped = dist_from_here_to_target-2;
+                if (dist_skipped > 0) {
+                    printf("Skipped %d\n",dist_skipped);
+                }
+            }
+        }
+    }
+
+
+
+    // printf("%s",map);
+    hashmap_free(distances);
+    free(path_array);
     free(map);
 }
