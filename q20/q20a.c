@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -311,6 +312,15 @@ Key pos_to_key(void* pos_generic){
     return k;
 }
 
+int modulo(int x, int y){
+    //why does the C modulo operator seem to only work on positive numbers, I will never know. . . .
+    double d_x = x;
+    double d_y = y;
+    double div = floor(d_x/d_y);
+    double mod = d_x-div*d_y;
+    return mod;
+}
+
 int main(){
     FILE* input;
     fopen_s(&input, "test.txt", "rb");
@@ -345,18 +355,59 @@ int main(){
     }
     printf("%d,%d %d,%d Size:%d,%d\n",start_pos[0],start_pos[1],end_pos[0],end_pos[1],x_size,y_size);
 
-    // Pathfinding setup
-    minheap pq = new_minheap();
-    hashmap* distances = hashmap_new(NULL,pos_to_key);
+    int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
+    int current_dir = 0;
+    int current_pos[2] = {start_pos[0],start_pos[1]};
 
-    // Inserting inital values
-    mhitem start = {0,{start_pos[0],start_pos[1]}};
-    minheap_insert(&pq, start);
+    int capacity = 20;
+    int size = 0;
+    int (*path_array)[2] = malloc(0);
 
-    hashmap_set(distances, start_pos, 0);
+    for (;;) {
+        // constructing an ordered array of path around the track 
+        path_array[size][0] = current_pos[0];
+        path_array[size][1] = current_pos[1];
+        size++;
+        if (size == capacity) {
+            capacity += 20; 
+            path_array = realloc(path_array, sizeof(int[2])*capacity);
+        }
+
+        // actual path finding through the racetrack
+        if (current_pos[0] == end_pos[0] && current_pos[1] == end_pos[1]) {
+            break; 
+        }
+
+        int* direction = directions[current_dir];
+        int next_pos[2] = {current_pos[0]+direction[0],current_pos[1]+direction[1]};
+        int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+
+        //change direction when original direction hits a wall
+        if (map[next_index] == '#') {
+            int possible_dir_index[2] = {current_dir+1,current_dir-1};
+            for (int i = 0; i < 2; i++) {
+                int dir_index = modulo(possible_dir_index[i], 4);
+                int* new_direction = directions[dir_index];
+                next_pos[0] = current_pos[0]+new_direction[0];
+                next_pos[1] = current_pos[1]+new_direction[1];
+                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+                if (map[next_index] == '.') {
+                    break;
+                }
+            }
+        }
+        // setting next point to process
+        current_pos[0] = next_pos[0];
+        current_pos[1] = next_pos[1];
+    }
+
+    // resizing oversized path array
+    if (capacity > size) {
+        path_array = realloc(path_array, size*sizeof(int[2]));
+    }
 
 
-    printf("%s\n",map);
+    printf("%s",map);
 
     free(map);
 }
