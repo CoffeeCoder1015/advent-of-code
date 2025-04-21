@@ -1,3 +1,4 @@
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -296,6 +297,20 @@ bool hashmap_set(hashmap* h, void* key, void* value){
     hashed_position->entries[hashed_position->length-1] = item;
     return true;
 }
+
+Key pos_to_key(void* pos_generic){
+    int32_t* pos = pos_generic;
+    Key k = new_key(8);
+
+    uint64_t combined = (uint64_t)pos[0] << 32;
+    combined |= pos[1];
+    for (int i = 0;  i < 8; i++) {
+        uint8_t byte_of_data = ( combined >> (i * 8) ) & 255; // grabs 8 bit slices out of the data
+        k.bytes[i] = byte_of_data;
+    }
+    return k;
+}
+
 int main(){
     FILE* input;
     fopen_s(&input, "test.txt", "rb");
@@ -329,6 +344,17 @@ int main(){
         line_end = strchr(line_end+1,'\n');
     }
     printf("%d,%d %d,%d Size:%d,%d\n",start_pos[0],start_pos[1],end_pos[0],end_pos[1],x_size,y_size);
+
+    // Pathfinding setup
+    minheap pq = new_minheap();
+    hashmap* distances = hashmap_new(NULL,pos_to_key);
+
+    // Inserting inital values
+    mhitem start = {0,{start_pos[0],start_pos[1]}};
+    minheap_insert(&pq, start);
+
+    hashmap_set(distances, start_pos, 0);
+
 
     printf("%s\n",map);
 
