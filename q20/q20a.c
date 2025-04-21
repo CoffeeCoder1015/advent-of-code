@@ -349,6 +349,8 @@ int main(){
     // X = skipable positions to check
     // # = where walls should be
     
+    int skips_at_least_100 = 0;
+
     for (int i = 0; i < size; i++) {
         int* current_pos = path_array[i];
         int current_index = current_pos[1]*(x_size+1)+current_pos[0];
@@ -372,16 +374,14 @@ int main(){
 
                 // dist between `target` and `here` after skip is 2
                 int dist_skipped = dist_from_here_to_target-2;
-                if (dist_skipped > 0) {
-                    printf("Skipped %d\n",dist_skipped);
+                if (dist_skipped >= 100) {
+                    skips_at_least_100++;
                 }
             }
         }
     }
 
-
-
-    // printf("%s",map);
+    printf("%d\n",skips_at_least_100);
     hashmap_free(distances);
     free(path_array);
     free(map);
