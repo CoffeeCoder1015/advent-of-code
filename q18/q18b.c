@@ -236,16 +236,16 @@ bool hashmap_expand(hashmap* h){
 
             size_t index = (size_t)(hash & (uint64_t)(new_capacity - 1));
 
-            map_slot* hased_position = &new_entries[index];
+            map_slot* hashed_position = &new_entries[index];
 
-            hased_position->length++;
-            if (hased_position->length == 1) {
-                hased_position->entries = malloc(sizeof(map_entry));
+            hashed_position->length++;
+            if (hashed_position->length == 1) {
+                hashed_position->entries = malloc(sizeof(map_entry));
             }else {
-                hased_position->entries = realloc(hased_position->entries, sizeof(map_entry)*hased_position->length);
+                hashed_position->entries = realloc(hashed_position->entries, sizeof(map_entry)*hashed_position->length);
             }
 
-            hased_position->entries[hased_position->length-1] = item.entries[j];
+            hashed_position->entries[hashed_position->length-1] = item.entries[j];
         }
     }
 
@@ -275,9 +275,9 @@ bool hashmap_set(hashmap* h, void* key, void* value){
 
     size_t index = (size_t)(hash & (uint64_t)(h->capacity - 1));
 
-    map_slot* hased_position = &h->slots[index];
-    for (int i = 0; i < hased_position->length; i++) {
-        map_entry* item = &hased_position->entries[i];
+    map_slot* hashed_position = &h->slots[index];
+    for (int i = 0; i < hashed_position->length; i++) {
+        map_entry* item = &hashed_position->entries[i];
         if (compare_key(converted_key, item->key)) {
             item->value = value;
             free(converted_key.bytes);
@@ -288,14 +288,14 @@ bool hashmap_set(hashmap* h, void* key, void* value){
     //if key is not found
     h->length++;
     map_entry item = {converted_key,value};
-    hased_position->length++;
-    if (hased_position->length == 1) {
-        hased_position->entries = malloc(sizeof(map_entry));
+    hashed_position->length++;
+    if (hashed_position->length == 1) {
+        hashed_position->entries = malloc(sizeof(map_entry));
     }else {
-        hased_position->entries = realloc(hased_position->entries, sizeof(map_entry)*hased_position->length);
+        hashed_position->entries = realloc(hashed_position->entries, sizeof(map_entry)*hashed_position->length);
     }
 
-    hased_position->entries[hased_position->length-1] = item;
+    hashed_position->entries[hashed_position->length-1] = item;
     return true;
 }
 
