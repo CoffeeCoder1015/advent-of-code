@@ -233,7 +233,7 @@ int modulo(int x, int y){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "q20.txt", "rb");
+    fopen_s(&input, "test.txt", "rb");
 
     fseek(input, 0, SEEK_END);
     size_t file_size = ftell(input);
@@ -265,6 +265,10 @@ int main(){
     }
 
     char* dir_glyph = ">v<^";
+    printf("\033[2J");
+    printf("\033[H");
+
+
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
     int current_dir = 0;
     int current_pos[2] = {start_pos[0],start_pos[1]};
@@ -323,53 +327,85 @@ int main(){
         path_array = realloc(path_array, size*sizeof(int[2]));
     }
 
-    // calculating skip times
-    //
-    // Covolution pattern:
-    //
-    //     X
-    //     #
-    //   X#O#X
-    //     #
-    //     X
-    //
-    // O = current positon
-    // X = skipable positions to check
-    // # = where walls should be
-    
-    int skips_at_least_100 = 0;
-
+    // Dikstra - Hashmap, Normal Queueu (hand rolled)
     for (int i = 0; i < size; i++) {
         int* current_pos = path_array[i];
         int current_index = current_pos[1]*(x_size+1)+current_pos[0];
-        for (int d_idx = 0; d_idx < 4; d_idx++) {
-            int* direction = directions[d_idx];
-            int wall_check[2] = {current_pos[0]+direction[0],current_pos[1]+direction[1]};
-            int target_position[2] = {current_pos[0]+2*direction[0],current_pos[1]+2*direction[1]};
 
-            bool x_in = 0 <= target_position[0] && target_position[0] < x_size;
-            bool y_in = 0 <= target_position[1] && target_position[1] < y_size;
-            if (!( x_in && y_in )) {
-                continue; 
-            }
+        int queue_size = 1;
+        int queue_capacity = 30;
+        int (*queue)[2] = malloc(sizeof(int[2])*30);
+        queue[0][0] = current_pos[0];
+        queue[0][1] = current_pos[1];
 
-            int target_index = target_position[1]*(x_size+1)+target_position[0];
-            int wall_index = wall_check[1]*(x_size+1)+wall_check[0];
-            if( map[wall_index] == '#' && map[target_index] == '.' || map[target_index] == 'E'){ // valid skip
-                // int dist_to_here = i;
-                int dist_to_target = (uint64_t)hashmap_get(distances, target_position).value;
-                int dist_from_here_to_target = dist_to_target-i; // dist to `here` is just i
+        hashmap* dk_distance = hashmap_new(NULL, pos_to_key);
+        hashmap_set(dk_distance, current_pos, 0);
+        while (queue_size > 0) {
+            int* dk_current = queue[0];
+            queue_size--;
 
-                // dist between `target` and `here` after skip is 2
-                int dist_skipped = dist_from_here_to_target-2;
-                if (dist_skipped >= 100) {
-                    skips_at_least_100++;
+            // realloc queue
+            memcpy_s(queue, sizeof(int[2])*capacity, &queue[1], queue_size*sizeof(int[2]));
+
+            uint64_t current_dist = (uint64_t)hashmap_get(dk_distance,dk_current).value;
+            for (int d = 0; d < 4; d++) {
+                int* direction =  directions[d];
+
+                int next_pos[2] = {dk_current[0]+direction[0],dk_current[1]+direction[1]};
+
+                bool x_in =  0 <= next_pos[0] && next_pos[0] < x_size;
+                bool y_in =  0 <= next_pos[1] && next_pos[1] < y_size;
+
+                if (!(x_in && y_in)) {
+                    continue; 
                 }
+
+                result r = hashmap_get(dk_distance,next_pos);
+                uint64_t neighbor_dist = (uint64_t)r.value;
+                uint64_t new_dist = current_dist+1;
+
+                // skipp when all the cheat seconds have been used up
+                if (new_dist > 2) { 
+                    continue; 
+                }
+
+                // checking for possible locations to end cheat
+                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+
+                if (map[next_index] == '.' || map[next_index] == 'E') {
+                    // distance to where the search started = i;
+                    int new_dist_to_target = new_dist + i;
+                    uint64_t original_distance = (uint64_t)hashmap_get(distances, next_pos).value;
+                    int dist_skipped = original_distance - new_dist_to_target; 
+                    if (dist_skipped > 0) {
+                        printf("Skipped %d\n",dist_skipped);
+                    }
+                }
+
+                if (!r.found ||  new_dist < neighbor_dist ) {
+                    // append to queue 
+                    queue_size++;
+                    if (queue_size == queue_capacity) {
+                        queue_capacity += 10; 
+                        queue = realloc(queue, queue_capacity*sizeof(int[2]));
+                    }
+                    queue[queue_size][0] = next_pos[0];
+                    queue[queue_size][1] = next_pos[1];
+
+                    // add set new dist to hashmap
+                    hashmap_set(dk_distance,  next_pos, (void*)new_dist);
+
+                }
+
             }
         }
+
+        free(queue);
+        hashmap_free(dk_distance);
     }
 
-    printf("%d\n",skips_at_least_100);
+
+    // printf("%d\n",skips_at_least_100);
     hashmap_free(distances);
     free(path_array);
     free(map);
