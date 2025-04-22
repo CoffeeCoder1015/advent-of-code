@@ -338,6 +338,14 @@ int main(){
 
         hashmap* dk_distance = hashmap_new(NULL, pos_to_key);
         hashmap_set(dk_distance, current_pos, 0);
+
+        // answer statistics
+        hashmap* skipped_dist = hashmap_new(NULL, pos_to_key);
+
+        int n_skip_list = 0;
+        int skip_list_capacity = 10;
+        int (*valid_skips)[2] = malloc(sizeof(int[2])*10);
+
         while (queue_size > 0) {
             int dk_current[2] = { queue[0][0],queue[0][1] };
             queue_size--;
@@ -363,22 +371,10 @@ int main(){
                 uint64_t new_dist = current_dist+1;
 
                 // skipp when all the cheat seconds have been used up
-                if (new_dist > 2) { 
+                if (new_dist > 20) { 
                     continue; 
                 }
 
-                // checking for possible locations to end cheat
-                int next_index = next_pos[1]*(x_size+1)+next_pos[0];
-
-                if (map[next_index] == '.' || map[next_index] == 'E') {
-                    // distance to where the search started = i;
-                    int new_dist_to_target = new_dist + i;
-                    uint64_t original_distance = (uint64_t)hashmap_get(distances, next_pos).value;
-                    int dist_skipped = original_distance - new_dist_to_target; 
-                    if (dist_skipped > 0) {
-                        printf("Skipped %d\n",dist_skipped);
-                    }
-                }
 
                 if (!r.found ||  new_dist < neighbor_dist ) {
                     // append to queue 
@@ -393,13 +389,47 @@ int main(){
                     // add set new dist to hashmap
                     hashmap_set(dk_distance,  next_pos, (void*)new_dist);
 
+                    // checking for possible locations to end cheat
+                    int next_index = next_pos[1]*(x_size+1)+next_pos[0];
+                    if (map[next_index] == '.' || map[next_index] == 'E') {
+                        // distance to where the search started = i;
+                        int new_dist_to_target = new_dist + i;
+                        uint64_t original_distance = (uint64_t)hashmap_get(distances, next_pos).value;
+                        int dist_skipped = original_distance - new_dist_to_target; 
+                        // printf("%d,%d->%d,%d %d\n",current_pos[0],current_pos[1],next_pos[0],next_pos[1],dist_skipped);
+                        if (dist_skipped >= 50) {
+                            hashmap_set(skipped_dist, next_pos, (void*)(uint64_t)dist_skipped);
+                            valid_skips[n_skip_list][0] = next_pos[0];
+                            valid_skips[n_skip_list][1] = next_pos[1];
+                            n_skip_list++;
+                            if (n_skip_list == skip_list_capacity) {
+                                skip_list_capacity += 10; 
+                                valid_skips = realloc(valid_skips, skip_list_capacity*sizeof(int[2]));
+                            }
+                        }
+                    }
+
                 }
 
             }
         }
+        // for (int j = 0; j < n_skip_list; j++) {
+        //     int* key = valid_skips[j];
+        //     int dist = (uint64_t)hashmap_get(skipped_dist, key).value;
+        //     printf("%d",dist);
+        //     if (j+1 != n_skip_list) {
+        //         printf(",");
+        //     }
+        // }
+        // if (n_skip_list>0) {
+        //     printf(",");
+        // }
+        
 
+        free(valid_skips);
         free(queue);
         hashmap_free(dk_distance);
+        hashmap_free(skipped_dist);
     }
 
 
