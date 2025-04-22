@@ -339,7 +339,7 @@ int main(){
         hashmap* dk_distance = hashmap_new(NULL, pos_to_key);
         hashmap_set(dk_distance, current_pos, 0);
         while (queue_size > 0) {
-            int* dk_current = queue[0];
+            int dk_current[2] = { queue[0][0],queue[0][1] };
             queue_size--;
 
             // realloc queue
@@ -382,13 +382,13 @@ int main(){
 
                 if (!r.found ||  new_dist < neighbor_dist ) {
                     // append to queue 
+                    queue[queue_size][0] = next_pos[0];
+                    queue[queue_size][1] = next_pos[1];
                     queue_size++;
                     if (queue_size == queue_capacity) {
                         queue_capacity += 10; 
                         queue = realloc(queue, queue_capacity*sizeof(int[2]));
                     }
-                    queue[queue_size][0] = next_pos[0];
-                    queue[queue_size][1] = next_pos[1];
 
                     // add set new dist to hashmap
                     hashmap_set(dk_distance,  next_pos, (void*)new_dist);
