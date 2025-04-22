@@ -265,8 +265,6 @@ int main(){
     }
 
     char* dir_glyph = ">v<^";
-    printf("\033[2J");
-    printf("\033[H");
 
 
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
