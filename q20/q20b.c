@@ -329,80 +329,19 @@ int main(){
 
     // Dikstra - Hashmap, Normal Queueu (hand rolled)
     for (int i = 0; i < size; i++) {
-        int* current_pos = path_array[i];
-        int current_index = current_pos[1]*(x_size+1)+current_pos[0];
-
-        int queue_size = 1;
-        int queue_capacity = 30;
-        int (*queue)[2] = malloc(sizeof(int[2])*30);
-        queue[0][0] = current_pos[0];
-        queue[0][1] = current_pos[1];
-
-        hashmap* dk_distance = hashmap_new(NULL, pos_to_key);
-        hashmap_set(dk_distance, current_pos, 0);
-
-        while (queue_size > 0) {
-            int dk_current[2] = { queue[0][0],queue[0][1] };
-            queue_size--;
-
-            // realloc queue
-            memcpy_s(queue, sizeof(int[2])*capacity, &queue[1], queue_size*sizeof(int[2]));
-
-            uint64_t current_dist = (uint64_t)hashmap_get(dk_distance,dk_current).value;
-            for (int d = 0; d < 4; d++) {
-                int* direction =  directions[d];
-
-                int next_pos[2] = {dk_current[0]+direction[0],dk_current[1]+direction[1]};
-
-                bool x_in =  0 <= next_pos[0] && next_pos[0] < x_size;
-                bool y_in =  0 <= next_pos[1] && next_pos[1] < y_size;
-
-                if (!(x_in && y_in)) {
-                    continue; 
-                }
-
-                result r = hashmap_get(dk_distance,next_pos);
-                uint64_t neighbor_dist = (uint64_t)r.value;
-                uint64_t new_dist = current_dist+1;
-
-                // skipp when all the cheat seconds have been used up
-                if (new_dist > 20) { 
-                    continue; 
-                }
-
-
-                if (!r.found ||  new_dist < neighbor_dist ) {
-                    // append to queue 
-                    queue[queue_size][0] = next_pos[0];
-                    queue[queue_size][1] = next_pos[1];
-                    queue_size++;
-                    if (queue_size == queue_capacity) {
-                        queue_capacity += 10; 
-                        queue = realloc(queue, queue_capacity*sizeof(int[2]));
-                    }
-
-                    // add set new dist to hashmap
-                    hashmap_set(dk_distance,  next_pos, (void*)new_dist);
-
-                    // checking for possible locations to end cheat
-                    int next_index = next_pos[1]*(x_size+1)+next_pos[0];
-                    if (map[next_index] == '.' || map[next_index] == 'E') {
-                        // distance to where the search started = i;
-                        int new_dist_to_target = new_dist + i;
-                        uint64_t original_distance = (uint64_t)hashmap_get(distances, next_pos).value;
-                        int dist_skipped = original_distance - new_dist_to_target; 
-                        if (dist_skipped >= 100) {
-                            skips_at_least_100++;
-                        }
-                    }
-
-                }
-
+        int* current_pos_x = path_array[i];
+        for (int j = 0; j < size; j++) {
+            int* current_pos_y = path_array[j];
+            int straight_dist = abs(current_pos_x[0]-current_pos_y[0]) + abs(current_pos_x[1]-current_pos_y[1]);
+            if (straight_dist > 20) {
+                continue; 
+            }
+            int x_dist = (uint64_t)hashmap_get(distances, current_pos_x).value;
+            int y_dist = (uint64_t)hashmap_get(distances, current_pos_y).value;
+            if (y_dist - x_dist - straight_dist >= 100) {
+                skips_at_least_100++; 
             }
         }
-
-        free(queue);
-        hashmap_free(dk_distance);
     }
 
 
