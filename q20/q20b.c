@@ -233,7 +233,7 @@ int modulo(int x, int y){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "test.txt", "rb");
+    fopen_s(&input, "q20.txt", "rb");
 
     fseek(input, 0, SEEK_END);
     size_t file_size = ftell(input);
@@ -325,6 +325,8 @@ int main(){
         path_array = realloc(path_array, size*sizeof(int[2]));
     }
 
+    int skips_at_least_100 = 0;
+
     // Dikstra - Hashmap, Normal Queueu (hand rolled)
     for (int i = 0; i < size; i++) {
         int* current_pos = path_array[i];
@@ -338,13 +340,6 @@ int main(){
 
         hashmap* dk_distance = hashmap_new(NULL, pos_to_key);
         hashmap_set(dk_distance, current_pos, 0);
-
-        // answer statistics
-        hashmap* skipped_dist = hashmap_new(NULL, pos_to_key);
-
-        int n_skip_list = 0;
-        int skip_list_capacity = 10;
-        int (*valid_skips)[2] = malloc(sizeof(int[2])*10);
 
         while (queue_size > 0) {
             int dk_current[2] = { queue[0][0],queue[0][1] };
@@ -396,16 +391,8 @@ int main(){
                         int new_dist_to_target = new_dist + i;
                         uint64_t original_distance = (uint64_t)hashmap_get(distances, next_pos).value;
                         int dist_skipped = original_distance - new_dist_to_target; 
-                        // printf("%d,%d->%d,%d %d\n",current_pos[0],current_pos[1],next_pos[0],next_pos[1],dist_skipped);
-                        if (dist_skipped >= 50) {
-                            hashmap_set(skipped_dist, next_pos, (void*)(uint64_t)dist_skipped);
-                            valid_skips[n_skip_list][0] = next_pos[0];
-                            valid_skips[n_skip_list][1] = next_pos[1];
-                            n_skip_list++;
-                            if (n_skip_list == skip_list_capacity) {
-                                skip_list_capacity += 10; 
-                                valid_skips = realloc(valid_skips, skip_list_capacity*sizeof(int[2]));
-                            }
+                        if (dist_skipped >= 100) {
+                            skips_at_least_100++;
                         }
                     }
 
@@ -413,27 +400,13 @@ int main(){
 
             }
         }
-        // for (int j = 0; j < n_skip_list; j++) {
-        //     int* key = valid_skips[j];
-        //     int dist = (uint64_t)hashmap_get(skipped_dist, key).value;
-        //     printf("%d",dist);
-        //     if (j+1 != n_skip_list) {
-        //         printf(",");
-        //     }
-        // }
-        // if (n_skip_list>0) {
-        //     printf(",");
-        // }
-        
 
-        free(valid_skips);
         free(queue);
         hashmap_free(dk_distance);
-        hashmap_free(skipped_dist);
     }
 
 
-    // printf("%d\n",skips_at_least_100);
+    printf("%d\n",skips_at_least_100);
     hashmap_free(distances);
     free(path_array);
     free(map);
