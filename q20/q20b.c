@@ -327,7 +327,12 @@ int main(){
 
     int skips_at_least_100 = 0;
 
-    // Dikstra - Hashmap, Normal Queueu (hand rolled)
+    // Assumptions not used in Ad Hoc solution
+    // For a skip to count, it must start and end on the race track.
+    // This means that you can directly compare the path with itself,
+    // as that would produce a pairing of valid Start & End points.
+    //
+    // This elminates the need to simulate turning off collision and pathfinding through walls.
     for (int i = 0; i < size; i++) {
         int* current_pos_x = path_array[i];
         for (int j = 0; j < size; j++) {
