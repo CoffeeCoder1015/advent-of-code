@@ -39,17 +39,34 @@ typedef struct{
     int* ptr;
 } array;
 
-array robot_to_robot_instructions(int* instructions, int n){
+int numpad_map(int x){
+    if (x == 'A') {
+        return 10; 
+    }
+    return x - '0';
+}
+
+
+array to_robot_instructions(int mode, int* instructions, int n){
     int base_capacity = 10;
     int base_size = 0;
     int* base_array = malloc(base_capacity*sizeof(int));
 
     int previous_mapping = 4;  
+    if (mode == 0) {
+        previous_mapping = 10; 
+    }
+
     for (int i = 0; i < n; i++) {
         int current_mapping = instructions[i];
-
         int* current = dirpad_coords[current_mapping];
         int* previous = dirpad_coords[previous_mapping];
+        if (mode == 0) {
+            current_mapping = numpad_map(current_mapping);
+            current = numpad_coords[current_mapping];
+            current = numpad_coords[previous_mapping];
+        }
+
         int vec_diff[2] = { current[0]-previous[0], current[1]-previous[1] };
         // printf("M:%d %d,%d -> %d,%d\n",current_mapping,previous[0],previous[1],current[0],current[1]);
         // printf("%c %d,%d\n",buffer[i],vec_diff[0],vec_diff[1]);
@@ -95,62 +112,8 @@ int main(){
         int n = strlen(buffer);
         buffer[--n] = '\0';
 
+
         printf("%s\n",buffer);
-        int base_capacity = 10;
-        int base_size = 0;
-        int* base_array = malloc(base_capacity*sizeof(int));
-
-        int previous_mapping = 10;  // mapping for 'A'
-        for (int i = 0; i < n; i++) {
-            int current_mapping = buffer[i] - '0';
-            if (buffer[i] == 'A') {
-                current_mapping = 10; 
-            }
-
-            int* current = numpad_coords[current_mapping];
-            int* previous = numpad_coords[previous_mapping];
-            int vec_diff[2] = { current[0]-previous[0], current[1]-previous[1] };
-            // printf("M:%d %d,%d -> %d,%d\n",current_mapping,previous[0],previous[1],current[0],current[1]);
-            // printf("%c %d,%d\n",buffer[i],vec_diff[0],vec_diff[1]);
-
-            int x_mag = abs(vec_diff[0]);
-            int y_mag = abs(vec_diff[1]);
-
-            int memory_defecit = base_size + x_mag + y_mag + 2  - base_capacity;
-            if (memory_defecit > 0) {
-                base_capacity += abs(memory_defecit);
-                base_array  = realloc(base_array, sizeof(int)*base_capacity);
-            }
-
-            int xneg = vec_diff[0]>>31 | !!vec_diff[0];
-            for (int j = 0; j < x_mag; j++) {
-                base_size++; 
-                base_array[base_size-1] = 1-xneg;
-            }
-
-            int yneg = vec_diff[1]>>31 | !!vec_diff[1];
-            for (int j = 0; j < y_mag; j++) {
-                base_size++; 
-                base_array[base_size-1] = 2-yneg;
-            }
-
-            base_size++;
-            base_array[base_size-1] = 4;
-            previous_mapping = current_mapping;
-        }
-
-        for (int i = 0; i < base_size; i++) {
-            printf("%c",dir_glyph[base_array[i]]) ;
-        }
-        printf("\n");
-
-        array r2 = robot_to_robot_instructions(base_array,base_size);
-        free(base_array);
-        int* l2 = r2.ptr;
-        for (int i = 0; i < r2.size; i++) {
-            printf("%c",dir_glyph[l2[i]]) ;
-        }
-        printf("\n");
         char* termination = strchr(buffer,'A');
         *termination = '\0';
         int interger_component = atoi(buffer);
