@@ -64,12 +64,12 @@ array to_robot_instructions(int mode, int* instructions, int n){
         if (mode == 0) {
             current_mapping = numpad_map(current_mapping);
             current = numpad_coords[current_mapping];
-            current = numpad_coords[previous_mapping];
+            previous = numpad_coords[previous_mapping];
         }
 
         int vec_diff[2] = { current[0]-previous[0], current[1]-previous[1] };
         // printf("M:%d %d,%d -> %d,%d\n",current_mapping,previous[0],previous[1],current[0],current[1]);
-        // printf("%c %d,%d\n",buffer[i],vec_diff[0],vec_diff[1]);
+        // printf("%c %d,%d\n",instructions[i],vec_diff[0],vec_diff[1]);
 
         int x_mag = abs(vec_diff[0]);
         int y_mag = abs(vec_diff[1]);
