@@ -46,7 +46,6 @@ int numpad_map(int x){
     return x - '0';
 }
 
-
 array to_robot_instructions(int mode, int* instructions, int n){
     int base_capacity = 10;
     int base_size = 0;
@@ -132,18 +131,13 @@ int main(){
         }
 
         array l1 = to_robot_instructions(0, ibuffer, n);
-        debug_print(l1);
-
         array l2 = to_robot_instructions(1, l1.ptr, l1.size);
-        debug_print(l2);
-
         array l3 = to_robot_instructions(1, l2.ptr, l2.size);
         debug_print(l3);
 
         free(l1.ptr);
         free(l2.ptr);
         free(l3.ptr);
-
         char* termination = strchr(buffer,'A');
         *termination = '\0';
         int interger_component = atoi(buffer);
