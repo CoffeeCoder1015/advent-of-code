@@ -85,24 +85,38 @@ array to_robot_instructions(int mode, int* instructions, int n){
         
         bool dirpadhit_nsx = applyx[0] == 0 && applyx[1] == 0;
         bool dirpadhit_nsy = applyy[0] == 0 && applyy[1] == 0;
-        bool reverse = dirpadhit_nsx && dirpadhit_nsy; 
+        bool reverse = dirpadhit_nsx || dirpadhit_nsy; 
         if(mode==0){ 
             bool numpadhit_nsx = applyx[0] == 0 && applyx[1] == 3;
             bool numpadhit_nsy = applyy[0] == 0 && applyy[1] == 3;
-            reverse = numpadhit_nsx && numpadhit_nsy; 
+            reverse = numpadhit_nsx || numpadhit_nsy; 
         }
 
 
         int xneg = vec_diff[0]>>31 | !!vec_diff[0];
-        for (int j = 0; j < x_mag; j++) {
-            base_size++; 
-            base_array[base_size-1] = 1-xneg;
+        int yneg = vec_diff[1]>>31 | !!vec_diff[1];
+        int x_index = 1-xneg;
+        int y_index = 2-yneg;
+
+        bool xfirst = xneg==-1 && !reverse || xneg >= 0 && reverse;
+
+        if (xfirst) {
+            for (int j = 0; j < x_mag; j++) {
+                base_size++; 
+                base_array[base_size-1] = 1-xneg;
+            }
         }
 
-        int yneg = vec_diff[1]>>31 | !!vec_diff[1];
         for (int j = 0; j < y_mag; j++) {
             base_size++; 
             base_array[base_size-1] = 2-yneg;
+        }
+
+        if (!xfirst) {
+            for (int j = 0; j < x_mag; j++) {
+                base_size++; 
+                base_array[base_size-1] = 1-xneg;
+            }
         }
 
         base_size++;
@@ -113,10 +127,10 @@ array to_robot_instructions(int mode, int* instructions, int n){
 }
 
 void debug_print(array a){
-    for (int i = 0; i < a.size; i++) {
-        printf("%d,",a.ptr[i]);
-    }
-    printf("\n");
+    // for (int i = 0; i < a.size; i++) {
+    //     printf("%d,",a.ptr[i]);
+    // }
+    // printf("\n");
     for (int i = 0; i < a.size; i++) {
         printf("%c",dir_glyph[a.ptr[i]]);
     }
@@ -126,7 +140,7 @@ void debug_print(array a){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "test.txt", "rb");
+    fopen_s(&input, "q21.txt", "rb");
 
     for (;;) {
         char buffer[1024];
@@ -147,7 +161,10 @@ int main(){
         array l1 = to_robot_instructions(0, ibuffer, n);
         array l2 = to_robot_instructions(1, l1.ptr, l1.size);
         array l3 = to_robot_instructions(1, l2.ptr, l2.size);
+        debug_print(l1);
+        debug_print(l2);
         debug_print(l3);
+        printf("%d %d %d\n",l1.size,l2.size,l3.size);
 
         free(l1.ptr);
         free(l2.ptr);
