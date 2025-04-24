@@ -184,22 +184,11 @@ array to_robot_instructions(int mode, int* instructions, int n){
     return (array){base_size,base_array} ;
 }
 
-void debug_print(array a){
-    // for (int i = 0; i < a.size; i++) {
-    //     printf("%d,",a.ptr[i]);
-    // }
-    // printf("\n");
-    for (int i = 0; i < a.size; i++) {
-        printf("%c",dir_glyph[a.ptr[i]]);
-    }
-    printf("\n");
-}
-
-
 int main(){
     FILE* input;
     fopen_s(&input, "q21.txt", "rb");
 
+    int complexity = 0;
     for (;;) {
         char buffer[1024];
         char* end = fgets(buffer, 1024 , input);
@@ -209,8 +198,6 @@ int main(){
         int n = strlen(buffer);
         buffer[--n] = '\0';
 
-        printf("%s\n",buffer);
-
         int ibuffer[1024];
         for (int i = 0; i < n; i++) {
             ibuffer[i]  = buffer[i];
@@ -219,17 +206,13 @@ int main(){
         array l1 = to_robot_instructions(0, ibuffer, n);
         array l2 = to_robot_instructions(1, l1.ptr, l1.size);
         array l3 = to_robot_instructions(1, l2.ptr, l2.size);
-        debug_print(l1);
-        debug_print(l2);
-        debug_print(l3);
-        printf("%d %d %d\n",l1.size,l2.size,l3.size);
-
         free(l1.ptr);
         free(l2.ptr);
         free(l3.ptr);
         char* termination = strchr(buffer,'A');
         *termination = '\0';
         int interger_component = atoi(buffer);
-        printf("%d\n",interger_component);
+        complexity += interger_component * l3.size;
     }
+    printf("%d\n",complexity);
 }
