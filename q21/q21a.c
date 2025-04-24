@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,6 +79,19 @@ array to_robot_instructions(int mode, int* instructions, int n){
             base_capacity += abs(memory_defecit);
             base_array  = realloc(base_array, sizeof(int)*base_capacity);
         }
+
+        int applyx[2] = {current[0],previous[1]};
+        int applyy[2] = {previous[0],current[1]};
+        
+        bool dirpadhit_nsx = applyx[0] == 0 && applyx[1] == 0;
+        bool dirpadhit_nsy = applyy[0] == 0 && applyy[1] == 0;
+        bool reverse = dirpadhit_nsx && dirpadhit_nsy; 
+        if(mode==0){ 
+            bool numpadhit_nsx = applyx[0] == 0 && applyx[1] == 3;
+            bool numpadhit_nsy = applyy[0] == 0 && applyy[1] == 3;
+            reverse = numpadhit_nsx && numpadhit_nsy; 
+        }
+
 
         int xneg = vec_diff[0]>>31 | !!vec_diff[0];
         for (int j = 0; j < x_mag; j++) {
