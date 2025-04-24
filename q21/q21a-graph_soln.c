@@ -408,7 +408,6 @@ int main(){
                         buffer[j] = '>';
                     }
                 }else {
-                    // printf("%d vec_diff[1]:%d\n",y_index,vec_diff[1]);
                     for (int j = 0; j < xmag; j++) {
                         buffer[j] = '<';
                     }
@@ -416,7 +415,6 @@ int main(){
                     for (int j = xmag; j < n ; j++) {
                         buffer[j] = dir_glyph[y_index];
                     }
-                    // printf("%d,%d %d,%d\n",vec_start[0],vec_start[1],vec_end[0],vec_end[1]);
                 }
             }else {
                 if (vec_diff[0] > 0) {
@@ -436,7 +434,6 @@ int main(){
                     for (int j = ymag; j < n; j++) {
                         buffer[j] = '<';
                     }
-                    // printf("%d,%d %d,%d\n",vec_start[0],vec_start[1],vec_end[0],vec_end[1]);
                 }
             }
             buffer[n] = 'A';
@@ -456,25 +453,7 @@ int main(){
 
         }
     }
-    // for (int i = 0; i < 11; i++) {
-    //     for (int j = 0; j < 11; j++) {
-    //         char first = i+'0';
-    //         char second = j+'0';
-    //         if (i == 10) {
-    //             first = 'A';
-    //         }
-    //         if (j == 10) {
-    //             second = 'A';
-    //         }
-    //         char key[] = {first,second,'\0'};
-    //
-    //         //checking
-    //         result r = hashmap_get(mappings,key);
-    //         printf("%s %s\n",key,r.value);
-    //     }
-    // }
-
-
+    
     int complexity = 0;
     for (;;) {
         char buffer[1024];
@@ -485,13 +464,9 @@ int main(){
         int n = strlen(buffer);
         buffer[--n] = '\0';
 
-        printf("%s\n",buffer);
         char* l1 = apply_mapping(mappings, buffer);
         char* l2 = apply_mapping(mappings, l1);
         char* l3 = apply_mapping(mappings, l2);
-        printf("%s %d\n",l1,strlen(l1));
-        printf("%s %d\n",l2,strlen(l2));
-        printf("%s %d\n",l3,strlen(l3));
         free(l1);
         free(l2);
         free(l3);
