@@ -270,6 +270,8 @@ Key str_to_key(void* strgeneric){
 //  Priority of Numpad:
 //  >v^< (if its gonna git the n.s)
 //  <^v> (reversed, if its not going to)
+//  This is reversed in this manner because first moving to (<), the furtheset from the starting point 
+//  means less traveling back and forth to the furthest key from (A) for robots down the line.
 //
 //  Priority for DirPad:
 //  >^v<
