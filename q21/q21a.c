@@ -5,6 +5,64 @@
 #include <stdlib.h>
 #include <string.h>
 
+// x_end > x_start:
+//  - Means moving from left to right (>)
+//  if y_end > y_start:
+//    - Means moving from top to bottom (v)
+//  if y_end < y_start:
+//    - Means moving from bottom to top (^)
+//
+//  Numpad:
+//  For this situation, moving (>) and (^) has no posibility of hitting the null square, so no prioity is given between them.
+//  When moving (v) and (>) however should prioitise (>) first to move away from x=0 to avoid going into null sqaure.
+//  for x+ & y+
+//  final: >v
+//
+//  Dirpad:
+//  Using the same analysis, moving up when on (<) on the dirpad would hit the nullsquare.
+//  thus, favor (>) over (^)
+//  for x+ & y-
+//  final: >^
+//
+//
+// x_end < x_start:
+//  - Means moving from right to left (<)
+//  Same y situation of 
+//    - y_end > y_start => (v)
+//    - y_end < y_start => (^)
+//
+//  Numpad:
+//  For this case, <^ can cause hitting the nullsquare.
+//  ### <v seems like it can, but hats the case when the final target is the nullsquare which is a much bigger problem.
+//  For this case, favoring (^) over (<) would allow it to move away from y=3 from the start to avoid the null square.
+//  for x- & y-
+//  final: ^<
+//
+//  Dirpad:
+//  Same analysis, if starting on (A) or (^) and want to reach (<), moving (<) first would hit the nullsquare. 
+//  Therefore the best option is to move (v) first.
+//  for x- & y+
+//  final: v<
+//
+//  Combining into a options matrix:
+//  * x  +   -
+//  y *---------
+//    |(N) |(D)
+//  + | >v | v<
+//    |----+----
+//  - | >^ | ^<
+//    |(D) |(N)
+//
+//  Priority of Numpad:
+//  >v^< (if its gonna git the n.s)
+//  <^v> (reversed, if its not going to)
+//  This is reversed in this manner because first moving to (<), the furtheset from the starting point 
+//  means less traveling back and forth to the furthest key from (A) for robots down the line.
+//
+//  Priority for DirPad:
+//  >^v<
+//  <v^>
+//  Notice that it is in the order of distance away from the starting square (A)
 //Nunber pad:
 // 'A' mapped to index 10, so that the rest of the numbers are a perfect hash
 //
