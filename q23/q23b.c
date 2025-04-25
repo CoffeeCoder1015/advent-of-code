@@ -296,6 +296,45 @@ void* stack_pop(Stack* s){
     return s->stack_items[s->stacklen];
 }
 
+typedef struct{
+    int depth;
+    char computer[3];
+    char* computers;
+} depth_track;
+
+depth_track* new_dt(char* computer){
+    depth_track* dt = malloc(sizeof(depth_track));
+    dt->depth = 0;
+    dt->computers = malloc(0);
+    dt->computer[0] = computer[0];
+    dt->computer[1] = computer[1];
+    dt->computer[2] = '\0';
+    return dt;
+}
+
+void free_dt(void* items){
+    depth_track* dt = items;
+    free(dt->computers);
+    free(dt);
+}
+
+// duplicates old one so a new one can be used in the stack
+// doesnt delete the old one because that will get handled by the stack
+// when all of it get freed
+depth_track* dt_increment_old(depth_track* old_dt,char* new_computer){
+    depth_track* new_dt = malloc(sizeof(depth_track));
+    memcpy_s(new_dt, sizeof(depth_track),old_dt , sizeof(depth_track));
+    new_dt->computers = realloc(new_dt->computers, new_dt->depth*3);
+    new_dt->computers[new_dt->depth] = new_dt->computer[0];
+    new_dt->computers[new_dt->depth+1] = new_dt->computer[1];
+    new_dt->computers[new_dt->depth+2] = new_dt->computer[2];
+    new_dt->depth++;
+    new_dt->computer[0] = new_computer[0];
+    new_dt->computer[1] = new_computer[1];
+    new_dt->computer[2] = '\0';
+    return new_dt;
+}
+
 int main(){
     FILE* input;
     fopen_s(&input, "q23.txt", "rb");
