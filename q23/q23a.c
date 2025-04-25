@@ -283,13 +283,9 @@ int main(){
         buffer[2] = '\0';
         char* c1 = &buffer[0];
         char* c2 = &buffer[3];
-        if (c1[0]!='t' && c2[0] == 't') {
-            char* t = c2;
-            c2 = c1;
-            c1 = t;
-        }
 
         result r = hashmap_get(connections, c1);
+        result r2 = hashmap_get(connections, c2);
         if (r.found) {
             append_connection(r.value, c2);
         }else {
@@ -301,8 +297,19 @@ int main(){
 
             conn_list* nc = new_connection();
             append_connection(nc, c2);
-            printf("%s %s\n",c1,c2);
             hashmap_set(connections,c1,nc);
+        }
+        if (r2.found) {
+            append_connection(r2.value, c1);
+        }else {
+            if (c2[0] == 't') {
+                tcc++; 
+                tComputers = realloc(tComputers, tcc);
+                tComputers[tcc-1] = c2[1];
+            }
+            conn_list* nc = new_connection();
+            append_connection(nc, c1);
+            hashmap_set(connections,c2,nc);
         }
     }
     for (int i = 0; i < tcc; i++) {
