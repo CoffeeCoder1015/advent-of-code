@@ -40,6 +40,17 @@ int main(){
         l_end = strchr(l_end+1, '\n');
     }
 
+    int loaded = 0;
+    int* store_array = malloc(sizeof(int8_t)*2000*line_count);
+
+    l_end = strchr(buffer, '\n');
+    char* l_start = buffer;
+    while (l_end != NULL) {
+        *l_end = '\0';
+        l_start = l_end+1;
+        l_end = strchr(l_end+1, '\n');
+    }
+
     size_t sum = 0;
     for (;;) {
         char buffer[1024];
