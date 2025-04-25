@@ -382,18 +382,14 @@ int main(){
     }
     fclose(input);
 
-    // Triangulation:
+    // General loop tracking:
     //
-    // A correct triple can now be found by going in one direction in the hashmap
-    // the problem is identifying when a correct sequence has been made
-    //
-    // At traversal depth 3, one of the keys must match with one of the keys at traversal depth 1.
-    // This forms a triangle of connections.
+    // At traversal depth n, one of the keys must match with one of the keys at traversal depth 1
+    // to form a loop of length n;
     //
     // This requires:
     // 1. Depth tracked traversal: A queue or stack that takes in a struct which will have a depth property.
-    // ^ Not needed as it can be implemented by hand to traverse to a depth level or 3;
-    // 2. re-comparing the items at traversal depth 1 to the oens at traversal depth 3
+    // 2. re-comparing the items at traversal depth 1 to the oens at traversal depth n
 
     int t_starts = 0;
     for (int i = 0; i < cc; i+=2) {
