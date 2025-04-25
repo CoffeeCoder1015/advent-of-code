@@ -33,6 +33,13 @@ int main(){
     fread(buffer,sizeof(char),size,input);
     buffer[size] = '\0';
 
+    char* l_end = strchr(buffer, '\n');
+    int line_count = 0;
+    while (l_end != NULL) {
+        line_count ++; 
+        l_end = strchr(l_end+1, '\n');
+    }
+
     size_t sum = 0;
     for (;;) {
         char buffer[1024];
