@@ -281,16 +281,10 @@ int main(){
         buffer[2] = '\0';
         char* c1 = &buffer[0];
         char* c2 = &buffer[3];
-        if (c1[0] > c2[0]) {
+        if (c1[0]!='t' && c2[0] == 't') {
             char* t = c2;
             c2 = c1;
             c1 = t;
-        }else if (c1[0] == c2[0]) {
-            if (c1[1] > c2[1]) {
-                char* t = c2;
-                c2 = c1;
-                c1 = t;
-            }
         }
 
         result r = hashmap_get(connections, c1);
