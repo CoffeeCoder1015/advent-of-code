@@ -214,5 +214,6 @@ int main(){
         int interger_component = atoi(buffer);
         complexity += interger_component * l3.size;
     }
+    fclose(input);
     printf("%d\n",complexity);
 }

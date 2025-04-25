@@ -542,5 +542,6 @@ int main(){
         uint64_t interger_component = atoi(buffer);
         complexity += interger_component * char_sum;
     }
+    fclose(input);
     printf("%llu\n",complexity);
 }

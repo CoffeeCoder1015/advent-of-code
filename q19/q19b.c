@@ -216,5 +216,6 @@ int main() {
     }
 
     printf("%zu\n",amount_possible);
+    fclose(inputs);
     free_trie(&t);
 }

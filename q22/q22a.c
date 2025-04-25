@@ -42,5 +42,6 @@ int main(){
         }
         sum+=p;
     }
+    fclose(input);
     printf("%llu\n",sum);
 }
