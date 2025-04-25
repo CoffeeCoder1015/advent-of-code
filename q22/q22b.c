@@ -279,8 +279,9 @@ int main(){
 
     hashmap* s = hashmap_new(NULL, seq_to_key);
 
+    int kcc = 2000;
     int kc = 0;
-    int (*keys)[4] = malloc(0);
+    int (*keys)[4] = malloc(sizeof(int[4])*kcc);
     for (int i = 0; i < line_count; i++) {
         hashmap* repeat = hashmap_new(NULL, seq_to_key);
         for (int j = 4+i*2000; j < 2000+i*2000; j++) {
@@ -300,7 +301,10 @@ int main(){
                     hashmap_set(s,key,(void*)new);
                 }else {
                     kc++;
-                    keys = realloc(keys, sizeof(int[4])*kc);
+                    if (kc > kcc) {
+                        kcc += 1000; 
+                        keys = realloc(keys, sizeof(int[4])*kcc);
+                    }
                     keys[kc-1][0]  = key[0];
                     keys[kc-1][1]  = key[1];
                     keys[kc-1][2]  = key[2];
