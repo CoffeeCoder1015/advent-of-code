@@ -380,6 +380,10 @@ int main(){
                     for (int j = 0; j < third_layer->conn_count; j++) {
                         char* tcomp = get_connection(third_layer, j);
                         bool eq = false;
+                        bool t_start = key[0] == 't' || dt[0] == 't' || tcomp[0] == 't';
+                        if (!t_start) {
+                            continue; 
+                        }
                         // linear search to check if its in the array;
                         for (int k = 0; k < c->conn_count; k++) {
                             char* rtComp = get_connection(c, k);
