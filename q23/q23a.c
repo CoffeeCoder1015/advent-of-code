@@ -356,6 +356,7 @@ int main(){
     // ^ Not needed as it can be implemented by hand to traverse to a depth level or 3;
     // 2. re-comparing the items at traversal depth 1 to the oens at traversal depth 3
 
+    int t_starts = 0;
     for (int i = 0; i < cc; i+=2) {
         char key[] = {Computers[i],Computers[i+1],'\0'};
         printf("K:%s\n",key);
@@ -389,6 +390,7 @@ int main(){
                             char* rtComp = get_connection(c, k);
                             if ( strcmp(rtComp, tcomp) == 0 ){
                                 eq = true;
+                                t_starts++;
                                 break;
                             }
                         }
@@ -400,6 +402,7 @@ int main(){
 
         free_stack(&s);
     }
+    printf("%d\n",t_starts);
 
     hashmap_free(connections);
     free(Computers);
