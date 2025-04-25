@@ -271,7 +271,7 @@ typedef struct {
 } Stack;
 
 Stack new_stack(void (*free_func)(void*)){
-    Stack s = { 0, 0, malloc(0), free_func };
+    Stack s = { 0, 10, malloc(sizeof(void*)*10), free_func };
     return s;
 }
 
@@ -352,15 +352,48 @@ int main(){
     //
     // This requires:
     // 1. Depth tracked traversal: A queue or stack that takes in a struct which will have a depth property.
+    // ^ Not needed as it can be implemented by hand to traverse to a depth level or 3;
     // 2. re-comparing the items at traversal depth 1 to the oens at traversal depth 3
 
     for (int i = 0; i < cc; i+=2) {
         char key[] = {Computers[i],Computers[i+1],'\0'};
         printf("K:%s\n",key);
-        result r = hashmap_get(connections, key);
-        if (r.found) {
-            print_connections(r.value);
+        Stack s = new_stack(NULL);
+
+        result root = hashmap_get(connections, key);
+        if (root.found) {
+            conn_list* c = root.value;
+            // print_connections(root.value);
+
+            for (int j = c->conn_count-1; j >= 0; j--) {
+                char* computer = get_connection(c, j);
+                stack_append(&s,computer);
+            }
+
+            while (s.stacklen > 0) {
+                char* dt = (char*)stack_pop(&s);
+                result r = hashmap_get(connections, dt);
+                printf("-> S: %s\n",dt);
+                if (r.found) {
+                    conn_list* third_layer = r.value;
+                    for (int j = 0; j < third_layer->conn_count; j++) {
+                        char* tcomp = get_connection(third_layer, j);
+                        bool eq = false;
+                        // linear search to check if its in the array;
+                        for (int k = 0; k < c->conn_count; k++) {
+                            char* rtComp = get_connection(c, k);
+                            if ( strcmp(rtComp, tcomp) == 0 ){
+                                eq = true;
+                                break;
+                            }
+                        }
+                        printf("----> T:%s %d\n",tcomp,eq);
+                    }
+                }
+            }
         }
+
+        free_stack(&s);
     }
 
     hashmap_free(connections);
