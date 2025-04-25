@@ -237,7 +237,9 @@ void free_conn_list(conn_list* c){
 }
 
 void free_conn_list_hashmap(map_entry* e){
-    free_conn_list_hashmap(e->value);
+    conn_list* c = e->value;
+    free(c->contig_store);
+    free(e->value);
 }
 
 void append_connection(conn_list* c, char* new_computer){
