@@ -309,6 +309,19 @@ int main(){
             hashmap_set(connections,c1,nc);
         }
     }
+
+    // Triangulation:
+    //
+    // A correct triple can now be found by going in one direction in the hashmap
+    // the problem is identifying when a correct sequence has been made
+    //
+    // At traversal depth 3, one of the keys must match with one of the keys at traversal depth 1.
+    // This forms a triangle of connections.
+    //
+    // This requires:
+    // 1. Depth tracked traversal: A queue or stack that takes in a struct which will have a depth property.
+    // 2. re-comparing the items at traversal depth 1 to the oens at traversal depth 3
+
     for (int i = 0; i < cc; i+=2) {
         char key[] = {Computers[i],Computers[i+1],'\0'};
         printf("K:%s\n",key);
