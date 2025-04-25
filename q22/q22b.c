@@ -267,7 +267,7 @@ int main(){
         size_t sec = atoll(l_start);
         for (int i = 0; i < 2000; i++) {
             int8_t price = sec%10;
-            store_array[i+loaded] = price;
+            store_array[i+loaded*2000] = price;
             sec = gen_sec_num(sec);
         }
         loaded++;
@@ -277,13 +277,55 @@ int main(){
     }
     free(buffer);
 
-    for (int i = 4; i < 2000; i++) {
-        int diff1 = store_array[i-3]-store_array[i-4];
-        int diff2 = store_array[i-2]-store_array[i-3];
-        int diff3 = store_array[i-1]-store_array[i-2];
-        int diff4 = store_array[i]-store_array[i-1];
-        int key[] = {diff1,diff2,diff3,diff4};
+    hashmap* s = hashmap_new(NULL, seq_to_key);
+
+    int kc = 0;
+    int (*keys)[4] = malloc(0);
+    for (int i = 0; i < line_count; i++) {
+        hashmap* repeat = hashmap_new(NULL, seq_to_key);
+        for (int j = 4+i*2000; j < 2000+i*2000; j++) {
+            int diff1 = store_array[j-3]-store_array[j-4];
+            int diff2 = store_array[j-2]-store_array[j-3];
+            int diff4 = store_array[j]-store_array[j-1];
+            int diff3 = store_array[j-1]-store_array[j-2];
+            int key[] = {diff1,diff2,diff3,diff4};
+
+            result check = hashmap_get(repeat, key);
+            if (!check.found) {
+                kc++;
+                keys = realloc(keys, sizeof(int[4])*kc);
+                keys[kc-1][0]  = key[0];
+                keys[kc-1][1]  = key[1];
+                keys[kc-1][2]  = key[2];
+                keys[kc-1][3]  = key[3];
+
+                hashmap_set(repeat, key, (void*)1);
+                result r = hashmap_get(s, key);
+                if (r.found) {
+                    size_t old = (uint64_t)r.value; 
+                    size_t new = old + store_array[j];
+                    hashmap_set(s,key,(void*)new);
+                }else {
+                    hashmap_set(s,key,(void*)(uint64_t)store_array[j]);
+                }
+            }
+        }
+        hashmap_free(repeat);
     }
 
+    int current_highest = 0;
+    for (int i = 0; i < kc; i++) {
+        int* key = keys[i];
+        result r = hashmap_get(s, key);
+        if (r.found) {
+            int max = (int)(size_t)r.value; 
+            if (max > current_highest) {
+                current_highest = max; 
+            }
+        }
+    }
+    printf("%d\n",current_highest);
+    hashmap_free(s);
+    free(keys);
     free(store_array);
 }
