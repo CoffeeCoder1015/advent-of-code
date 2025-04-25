@@ -270,8 +270,8 @@ int main(){
 
     hashmap* connections = hashmap_new(free_conn_list_hashmap,str_to_key);
 
-    int tcc = 0;
-    char* tComputers = malloc(0);
+    int cc = 0;
+    char* Computers = malloc(0);
     for (;;) {
         char buffer[1024];
         char* end = fgets(buffer,1024,input);
@@ -284,43 +284,41 @@ int main(){
         char* c1 = &buffer[0];
         char* c2 = &buffer[3];
 
+        if (c1[0] > c2[0]) {
+            char* t = c2;
+            c2 = c1;
+            c1 = t;
+        }else if (c1[0] == c2[0]) {
+            if (c1[1] > c2[1]) {
+                char* t = c2;
+                c2 = c1;
+                c1 = t;
+            }
+        }
         result r = hashmap_get(connections, c1);
-        result r2 = hashmap_get(connections, c2);
         if (r.found) {
             append_connection(r.value, c2);
         }else {
-            if (c1[0] == 't') {
-                tcc++; 
-                tComputers = realloc(tComputers, tcc);
-                tComputers[tcc-1] = c1[1];
-            }
+            cc+=2; 
+            Computers = realloc(Computers, cc);
+            Computers[cc-2] = c1[0];
+            Computers[cc-1] = c1[1];
 
             conn_list* nc = new_connection();
             append_connection(nc, c2);
             hashmap_set(connections,c1,nc);
         }
-        if (r2.found) {
-            append_connection(r2.value, c1);
-        }else {
-            if (c2[0] == 't') {
-                tcc++; 
-                tComputers = realloc(tComputers, tcc);
-                tComputers[tcc-1] = c2[1];
-            }
-            conn_list* nc = new_connection();
-            append_connection(nc, c1);
-            hashmap_set(connections,c2,nc);
-        }
     }
-    for (int i = 0; i < tcc; i++) {
-        char k[] = {'t',tComputers[i],'\0'};
-        result r = hashmap_get(connections, k);
-        printf("%s:\n",k);
+    for (int i = 0; i < cc; i+=2) {
+        char key[] = {Computers[i],Computers[i+1],'\0'};
+        printf("K:%s\n",key);
+        result r = hashmap_get(connections, key);
         if (r.found) {
             print_connections(r.value);
         }
     }
+
     hashmap_free(connections);
-    free(tComputers);
+    free(Computers);
     fclose(input);
 }
