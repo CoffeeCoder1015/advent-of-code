@@ -24,7 +24,7 @@ size_t gen_sec_num(size_t last_sec_num){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "test.txt", "r");
+    fopen_s(&input, "q22.txt", "r");
 
     size_t sum = 0;
     for (;;) {
