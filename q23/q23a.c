@@ -298,7 +298,7 @@ void* stack_pop(Stack* s){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "test.txt", "rb");
+    fopen_s(&input, "q23.txt", "rb");
 
     hashmap* connections = hashmap_new(free_conn_list_hashmap,str_to_key);
 
@@ -359,13 +359,11 @@ int main(){
     int t_starts = 0;
     for (int i = 0; i < cc; i+=2) {
         char key[] = {Computers[i],Computers[i+1],'\0'};
-        printf("K:%s\n",key);
         Stack s = new_stack(NULL);
 
         result root = hashmap_get(connections, key);
         if (root.found) {
             conn_list* c = root.value;
-            // print_connections(root.value);
 
             for (int j = c->conn_count-1; j >= 0; j--) {
                 char* computer = get_connection(c, j);
@@ -375,12 +373,10 @@ int main(){
             while (s.stacklen > 0) {
                 char* dt = (char*)stack_pop(&s);
                 result r = hashmap_get(connections, dt);
-                printf("-> S: %s\n",dt);
                 if (r.found) {
                     conn_list* third_layer = r.value;
                     for (int j = 0; j < third_layer->conn_count; j++) {
                         char* tcomp = get_connection(third_layer, j);
-                        bool eq = false;
                         bool t_start = key[0] == 't' || dt[0] == 't' || tcomp[0] == 't';
                         if (!t_start) {
                             continue; 
@@ -389,12 +385,11 @@ int main(){
                         for (int k = 0; k < c->conn_count; k++) {
                             char* rtComp = get_connection(c, k);
                             if ( strcmp(rtComp, tcomp) == 0 ){
-                                eq = true;
                                 t_starts++;
                                 break;
                             }
                         }
-                        printf("----> T:%s %d\n",tcomp,eq);
+
                     }
                 }
             }
