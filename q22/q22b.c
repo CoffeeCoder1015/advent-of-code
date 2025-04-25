@@ -209,6 +209,15 @@ bool hashmap_set(hashmap* h, void* key, void* value){
     return true;
 }
 
+Key seq_to_key(void* gen_seq){
+    int* seq = gen_seq;
+    Key k = new_key(4);
+    for (int i = 0; i < 4; i++) {
+        k.bytes[i] = seq[i];
+    }
+    return k;
+}
+
 
 size_t gen_sec_num(size_t last_sec_num){
     // step 1
