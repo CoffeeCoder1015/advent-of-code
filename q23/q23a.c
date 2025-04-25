@@ -263,6 +263,38 @@ void print_connections(conn_list* c){
     }
 }
 
+typedef struct {
+    int stacklen;
+    int stackcap;
+    void** stack_items;
+    void (*free_func)(void*);
+} Stack;
+
+Stack new_stack(void (*free_func)(void*)){
+    Stack s = { 0, 0, malloc(0), free_func };
+    return s;
+}
+
+void free_stack(Stack* s){
+    for (int i = 0; i < s->stacklen; i++) {
+        s->free_func(s->stack_items[i]);
+    }
+    free(s->stack_items);
+}
+
+void stack_append(Stack* s, void* item){
+    s->stacklen++;
+    if (s->stacklen>s->stackcap) {
+        s->stackcap+=20; 
+        s->stack_items = realloc(s->stack_items, sizeof(void*)*s->stackcap);
+    }
+    s->stack_items[s->stacklen-1] = item;
+}
+
+void* stack_pop(Stack* s){
+    s->stacklen--;
+    return s->stack_items[s->stacklen];
+}
 
 int main(){
     FILE* input;
