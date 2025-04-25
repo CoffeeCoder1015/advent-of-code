@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,25 +48,16 @@ int main(){
     char* l_start = buffer;
     while (l_end != NULL) {
         *l_end = '\0';
+        size_t sec = atoll(l_start);
+        for (int i = 0; i < 2000; i++) {
+            int8_t price = sec%10;
+            store_array[i+loaded] = price;
+            sec = gen_sec_num(sec);
+        }
+        loaded++;
+
         l_start = l_end+1;
         l_end = strchr(l_end+1, '\n');
     }
 
-    size_t sum = 0;
-    for (;;) {
-        char buffer[1024];
-        char* end = fgets(buffer, 1024 , input);
-        if (end == NULL) {
-            break; 
-        }
-        int n = strlen(buffer);
-        buffer[--n] = '\0';
-        size_t inital = atoll(buffer);
-        size_t p = inital;
-        for (int i = 0; i < 2000; i++) {
-            p = gen_sec_num(p);
-        }
-        sum+=p;
-    }
-    printf("%llu\n",sum);
 }
