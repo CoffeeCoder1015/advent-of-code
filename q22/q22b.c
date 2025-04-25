@@ -32,6 +32,7 @@ int main(){
     rewind(input);
     char* buffer = malloc(size);
     fread(buffer,sizeof(char),size,input);
+    fclose(input);
     buffer[size] = '\0';
 
     char* l_end = strchr(buffer, '\n');
@@ -59,5 +60,7 @@ int main(){
         l_start = l_end+1;
         l_end = strchr(l_end+1, '\n');
     }
+    free(buffer);
 
+    free(store_array);
 }
