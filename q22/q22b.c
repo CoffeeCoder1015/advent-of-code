@@ -43,7 +43,7 @@ int main(){
     }
 
     int loaded = 0;
-    int* store_array = malloc(sizeof(int8_t)*2000*line_count);
+    int8_t* store_array = malloc(sizeof(int8_t)*2000*line_count);
 
     l_end = strchr(buffer, '\n');
     char* l_start = buffer;
