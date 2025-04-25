@@ -270,6 +270,8 @@ int main(){
 
     hashmap* connections = hashmap_new(free_conn_list_hashmap,str_to_key);
 
+    int tcc = 0;
+    char* tComputers = malloc(0);
     for (;;) {
         char buffer[1024];
         char* end = fgets(buffer,1024,input);
@@ -291,15 +293,27 @@ int main(){
         if (r.found) {
             append_connection(r.value, c2);
         }else {
+            if (c1[0] == 't') {
+                tcc++; 
+                tComputers = realloc(tComputers, tcc);
+                tComputers[tcc-1] = c1[1];
+            }
+
             conn_list* nc = new_connection();
             append_connection(nc, c2);
             printf("%s %s\n",c1,c2);
             hashmap_set(connections,c1,nc);
         }
     }
-    result r = hashmap_get(connections, "de");
-    if (r.found) {
-        print_connections(r.value);
+    for (int i = 0; i < tcc; i++) {
+        char k[] = {'t',tComputers[i],'\0'};
+        result r = hashmap_get(connections, k);
+        printf("%s:\n",k);
+        if (r.found) {
+            print_connections(r.value);
+        }
     }
+    hashmap_free(connections);
+    free(tComputers);
     fclose(input);
 }
