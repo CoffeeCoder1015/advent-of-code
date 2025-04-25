@@ -292,13 +292,6 @@ int main(){
 
             result check = hashmap_get(repeat, key);
             if (!check.found) {
-                kc++;
-                keys = realloc(keys, sizeof(int[4])*kc);
-                keys[kc-1][0]  = key[0];
-                keys[kc-1][1]  = key[1];
-                keys[kc-1][2]  = key[2];
-                keys[kc-1][3]  = key[3];
-
                 hashmap_set(repeat, key, (void*)1);
                 result r = hashmap_get(s, key);
                 if (r.found) {
@@ -306,6 +299,13 @@ int main(){
                     size_t new = old + store_array[j];
                     hashmap_set(s,key,(void*)new);
                 }else {
+                    kc++;
+                    keys = realloc(keys, sizeof(int[4])*kc);
+                    keys[kc-1][0]  = key[0];
+                    keys[kc-1][1]  = key[1];
+                    keys[kc-1][2]  = key[2];
+                    keys[kc-1][3]  = key[3];
+
                     hashmap_set(s,key,(void*)(uint64_t)store_array[j]);
                 }
             }
