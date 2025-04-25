@@ -62,5 +62,13 @@ int main(){
     }
     free(buffer);
 
+    for (int i = 4; i < 2000; i++) {
+        int diff1 = store_array[i-3]-store_array[i-4];
+        int diff2 = store_array[i-2]-store_array[i-3];
+        int diff3 = store_array[i-1]-store_array[i-2];
+        int diff4 = store_array[i]-store_array[i-1];
+        int key[] = {diff1,diff2,diff3,diff4};
+    }
+
     free(store_array);
 }
