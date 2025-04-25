@@ -240,7 +240,7 @@ size_t gen_sec_num(size_t last_sec_num){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "test.txt", "rb");
+    fopen_s(&input, "q22.txt", "rb");
 
     fseek(input, 0, SEEK_END);
     size_t size = ftell(input);
