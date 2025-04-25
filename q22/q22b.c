@@ -24,7 +24,14 @@ size_t gen_sec_num(size_t last_sec_num){
 
 int main(){
     FILE* input;
-    fopen_s(&input, "q22.txt", "r");
+    fopen_s(&input, "test.txt", "rb");
+
+    fseek(input, 0, SEEK_END);
+    size_t size = ftell(input);
+    rewind(input);
+    char* buffer = malloc(size);
+    fread(buffer,sizeof(char),size,input);
+    buffer[size] = '\0';
 
     size_t sum = 0;
     for (;;) {
