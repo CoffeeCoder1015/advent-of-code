@@ -341,6 +341,7 @@ int main(){
             hashmap_set(connections,c1,nc);
         }
     }
+    fclose(input);
 
     // Triangulation:
     //
@@ -398,5 +399,4 @@ int main(){
 
     hashmap_free(connections);
     free(Computers);
-    fclose(input);
 }
