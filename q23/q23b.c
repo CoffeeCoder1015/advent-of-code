@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -259,8 +260,9 @@ char* get_connection(conn_list* c, int index){
 void print_connections(conn_list* c){
     int n = c->conn_count;
     for (int i = 0; i < n; i++) {
-        printf("c-> %s\n",get_connection(c, i));
+        printf("c-> %s; ",get_connection(c, i));
     }
+    printf("\n");
 }
 
 typedef struct {
@@ -304,7 +306,7 @@ typedef struct{
 
 depth_track* new_dt(char* computer){
     depth_track* dt = malloc(sizeof(depth_track));
-    dt->depth = 0;
+    dt->depth = 1;
     dt->computers = malloc(0);
     dt->computer[0] = computer[0];
     dt->computer[1] = computer[1];
@@ -324,10 +326,15 @@ void free_dt(void* items){
 depth_track* dt_increment_old(depth_track* old_dt,char* new_computer){
     depth_track* new_dt = malloc(sizeof(depth_track));
     memcpy_s(new_dt, sizeof(depth_track),old_dt , sizeof(depth_track));
-    new_dt->computers = realloc(new_dt->computers, new_dt->depth*3);
-    new_dt->computers[new_dt->depth] = new_dt->computer[0];
-    new_dt->computers[new_dt->depth+1] = new_dt->computer[1];
-    new_dt->computers[new_dt->depth+2] = new_dt->computer[2];
+    int n = 3*( new_dt->depth-1 );
+    new_dt->computers = malloc(new_dt->depth*3);
+    strcpy_s(new_dt->computers, new_dt->depth*3, old_dt->computers);
+    if (n > 0) {
+        new_dt->computers[n-1] = ',';
+    }
+    new_dt->computers[n] = new_dt->computer[0];
+    new_dt->computers[n+1] = new_dt->computer[1];
+    new_dt->computers[n+2] = new_dt->computer[2];
     new_dt->depth++;
     new_dt->computer[0] = new_computer[0];
     new_dt->computer[1] = new_computer[1];
@@ -391,49 +398,96 @@ int main(){
     // 1. Depth tracked traversal: A queue or stack that takes in a struct which will have a depth property.
     // 2. re-comparing the items at traversal depth 1 to the oens at traversal depth n
 
-    int t_starts = 0;
+    int highest_depth = 1;
+    char* seq = malloc(0);
     for (int i = 0; i < cc; i+=2) {
         char key[] = {Computers[i],Computers[i+1],'\0'};
-        Stack s = new_stack(NULL);
+        Stack s = new_stack(free_dt);
 
         result root = hashmap_get(connections, key);
         if (root.found) {
             conn_list* c = root.value;
 
-            for (int j = c->conn_count-1; j >= 0; j--) {
-                char* computer = get_connection(c, j);
-                stack_append(&s,computer);
-            }
+            stack_append(&s,new_dt(key));
 
             while (s.stacklen > 0) {
-                char* dt = (char*)stack_pop(&s);
-                result r = hashmap_get(connections, dt);
-                if (r.found) {
-                    conn_list* third_layer = r.value;
-                    for (int j = 0; j < third_layer->conn_count; j++) {
-                        char* tcomp = get_connection(third_layer, j);
-                        bool t_start = key[0] == 't' || dt[0] == 't' || tcomp[0] == 't';
-                        if (!t_start) {
-                            continue; 
-                        }
-                        // linear search to check if its in the array;
-                        for (int k = 0; k < c->conn_count; k++) {
-                            char* rtComp = get_connection(c, k);
-                            if ( strcmp(rtComp, tcomp) == 0 ){
-                                t_starts++;
-                                break;
+                depth_track* dt = (depth_track*)stack_pop(&s);
+                char* next_key = dt->computer;
+                result r = hashmap_get(connections, next_key);
+
+
+                int connections_made = 0;
+                // printf("CLHistory:%s %s\n",dt->computers,next_key);
+                for (int j = 0; j < dt->depth-1; j++) {
+                    char key[3];
+                    key[2] = '\0';
+                    key[0] = dt->computers[j*3];
+                    key[1] = dt->computers[j*3+1];
+                    result r = hashmap_get(connections,key);
+                    if (r.found) {
+                        conn_list* cls = r.value; 
+                        bool found = false;
+                        for (int k = 0; k < cls->conn_count; k++) {
+                            char* checking_computer = get_connection(cls, k);
+                            bool isIn = strcmp(checking_computer, next_key) == 0;
+                            if (isIn) {
+                                if (strcmp(next_key, "ge") == 0) {
+                                    bool b = strcmp(checking_computer, next_key) == 0;
+                                    printf("KEY:%s %d %d %d=%d ",key,j,dt->depth,b,isIn);
+                                    printf("%s %s %d\n",checking_computer,dt->computers,b);
+                                }
+                                connections_made++;
+                                found = true;
+                                break;  
                             }
                         }
-
+                        if (found) {
+                            // printf("Computer:%s -> %s\n",key,next_key);
+                            // print_connections(cls);
+                        }
                     }
+                }
+
+                if (connections_made+1 == dt->depth) {
+                    if (dt->depth > highest_depth) {
+                        printf("FC:%s %s\n",dt->computers,dt->computer);
+                        highest_depth = dt->depth;
+
+
+                        for (int j = 0; j < dt->depth; j++) {
+                            char key[3];
+                            key[2] = '\0';
+                            key[0] = dt->computers[j*3];
+                            key[1] = dt->computers[j*3+1];
+                            result r = hashmap_get(connections,key);
+                            if (r.found) {
+                                conn_list* cls = r.value; 
+                                bool found = false;
+                                for (int k = 0; k < cls->conn_count; k++) {
+                                    char* checking_computer = get_connection(cls, k);
+                                    // printf("?%s %s\n",key,checking_computer);
+                                }
+                            }
+                        }
+                        // printf("\n");
+                    }
+                }else {
+                    continue;
+                }
+                if (r.found) {
+                    conn_list* layer_x = r.value;
+                    for (int j = layer_x->conn_count-1; j >= 0; j--) {
+                        char* computer = get_connection(layer_x, j);
+                        stack_append(&s, dt_increment_old(dt, computer));
+                    } 
                 }
             }
         }
 
         free_stack(&s);
     }
-    printf("%d\n",t_starts);
-
+    printf("%s\n",seq);
+    free(seq);
     hashmap_free(connections);
     free(Computers);
 }
