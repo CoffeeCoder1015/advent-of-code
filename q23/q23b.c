@@ -415,9 +415,7 @@ int main(){
                 char* next_key = dt->computer;
                 result r = hashmap_get(connections, next_key);
 
-
                 int connections_made = 0;
-                // printf("CLHistory:%s %s\n",dt->computers,next_key);
                 for (int j = 0; j < dt->depth-1; j++) {
                     char key[3];
                     key[2] = '\0';
@@ -426,50 +424,29 @@ int main(){
                     result r = hashmap_get(connections,key);
                     if (r.found) {
                         conn_list* cls = r.value; 
-                        bool found = false;
                         for (int k = 0; k < cls->conn_count; k++) {
                             char* checking_computer = get_connection(cls, k);
                             bool isIn = strcmp(checking_computer, next_key) == 0;
                             if (isIn) {
-                                if (strcmp(next_key, "ge") == 0) {
-                                    bool b = strcmp(checking_computer, next_key) == 0;
-                                    printf("KEY:%s %d %d %d=%d ",key,j,dt->depth,b,isIn);
-                                    printf("%s %s %d\n",checking_computer,dt->computers,b);
-                                }
                                 connections_made++;
-                                found = true;
                                 break;  
                             }
                         }
-                        if (found) {
-                            // printf("Computer:%s -> %s\n",key,next_key);
-                            // print_connections(cls);
-                        }
                     }
                 }
-
                 if (connections_made+1 == dt->depth) {
                     if (dt->depth > highest_depth) {
-                        printf("FC:%s %s\n",dt->computers,dt->computer);
+                        // set answer in answer region;
                         highest_depth = dt->depth;
-
-
-                        for (int j = 0; j < dt->depth; j++) {
-                            char key[3];
-                            key[2] = '\0';
-                            key[0] = dt->computers[j*3];
-                            key[1] = dt->computers[j*3+1];
-                            result r = hashmap_get(connections,key);
-                            if (r.found) {
-                                conn_list* cls = r.value; 
-                                bool found = false;
-                                for (int k = 0; k < cls->conn_count; k++) {
-                                    char* checking_computer = get_connection(cls, k);
-                                    // printf("?%s %s\n",key,checking_computer);
-                                }
-                            }
+                        seq = realloc(seq, highest_depth*3);
+                        strcpy_s(seq, highest_depth*3, dt->computers);
+                        int n = ( dt->depth-1 )*3;
+                        if (n > 0) {
+                            seq[n-1] = ',';
                         }
-                        // printf("\n");
+                        seq[n] = dt->computer[0];
+                        seq[n+1] = dt->computer[1];
+                        seq[n+2] = dt->computer[2];
                     }
                 }else {
                     continue;
