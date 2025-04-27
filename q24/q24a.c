@@ -409,7 +409,9 @@ int main(){
         if (r.found) {
             operation* of = r.value;
             int shift_count = z_count-i-1;
-            answer |= of->output << shift_count;  
+            uint64_t formatted_leading = of->output;
+            formatted_leading <<= shift_count;
+            answer ^= formatted_leading;  
         }
     }
     printf("%llu\n",answer);
