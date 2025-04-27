@@ -334,6 +334,7 @@ int main(){
     fclose(inputs);
     z_isort(z_keys, z_count);
 
+    uint64_t answer = 0;
     for (int i = 0; i < z_count ; i++) {
         char* ref = &z_keys[i*4];
 
@@ -403,8 +404,15 @@ int main(){
         }
 
         free(call_stack);
-    }
 
+        result r = hashmap_get(mapping, ref);
+        if (r.found) {
+            operation* of = r.value;
+            int shift_count = z_count-i-1;
+            answer |= of->output << shift_count;  
+        }
+    }
+    printf("%llu\n",answer);
 
     free(z_keys);
     hashmap_free(mapping);
