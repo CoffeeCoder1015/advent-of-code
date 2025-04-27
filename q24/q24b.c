@@ -298,7 +298,8 @@ int main(){
         operation* ox =new_operation(NULL, NULL, -1, value);
         hashmap_set(mapping, buffer, ox);
     }
-    printf("%llu %llu\n",x,y);
+    uint64_t expected_z = x+y;
+    printf("%llu %llu %llu\n",x,y,expected_z);
 
     int z_count = 0;
     char* z_keys = malloc(0);
