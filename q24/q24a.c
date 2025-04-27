@@ -266,6 +266,8 @@ int main(){
         hashmap_set(mapping, buffer, ox);
     }
 
+    int z_count = 0;
+    char* z_keys = malloc(0);
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
         if (end == NULL) {
@@ -295,7 +297,18 @@ int main(){
         }
         operation* ox = new_operation(i1, i2, opcode, -1);
         hashmap_set(mapping,out,ox);
+
+        if (out[0] == 'z') {
+            z_count++; 
+            z_keys = realloc(z_keys, 4*z_count);
+            int ref = 4*(z_count-1);
+            z_keys[ref] = out[0];
+            z_keys[ref+1] = out[1];
+            z_keys[ref+2] = out[2];
+            z_keys[ref+3] = '\0';
+        }
     }
     fclose(inputs);
+    free(z_keys);
     hashmap_free(mapping);
 }
