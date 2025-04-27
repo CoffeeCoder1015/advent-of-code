@@ -1,3 +1,4 @@
+#include <complex.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -270,8 +271,31 @@ int main(){
         if (end == NULL) {
             break; 
         }
+        char* sep = strchr(buffer, ' ');
+        *sep = '\0';
+        char* i1 = buffer;
+        char* sep2 = strchr(sep+1, ' ');
+        *sep2 = '\0';
+        char* op = sep+1;
+        char* sep3 = strchr(sep2+1,  ' ');
+        *sep3 = '\0';
+        char* i2 = sep2+1;
+        char* out = strchr(sep3+1, '>')+2;
+        int opcode = 0;
+        switch (op[0]) {
+            case 'A': // AND
+                opcode = 0;
+            break;
+            case 'O': // OR
+                opcode = 1;
+            break;
+            case 'X': // XOR
+                opcode = 2;
+            break;
+        }
+        operation* ox = new_operation(i1, i2, opcode, -1);
+        hashmap_set(mapping,out,ox);
     }
-
     fclose(inputs);
     hashmap_free(mapping);
 }
