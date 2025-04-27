@@ -302,21 +302,29 @@ typedef struct{
     int depth;
     char computer[3];
     char* computers;
+    int P_size;
+    char* P;
 } depth_track;
 
-depth_track* new_dt(char* computer){
+depth_track* new_dt(char* computer,char* P,int P_size){
     depth_track* dt = malloc(sizeof(depth_track));
     dt->depth = 1;
     dt->computers = malloc(0);
     dt->computer[0] = computer[0];
     dt->computer[1] = computer[1];
     dt->computer[2] = '\0';
+    dt->P_size = P_size;
+    dt->P = malloc(P_size*3);
+    memcpy_s(dt->P, P_size*3, P, P_size*3);
     return dt;
 }
 
 void free_dt(void* items){
     depth_track* dt = items;
     free(dt->computers);
+    if (dt->P_size>0) {
+        free(dt->P);
+    }
     free(dt);
 }
 
@@ -340,6 +348,28 @@ depth_track* dt_increment_old(depth_track* old_dt,char* new_computer){
     new_dt->computer[1] = new_computer[1];
     new_dt->computer[2] = '\0';
     return new_dt;
+}
+
+void takeIntersection(depth_track* dt, char* newP, int P_size){
+    int intersect_size = 0;
+    char* intersection_set = malloc(0);
+    for (int i = 0; i < P_size; i++) {
+        char* Pi = &newP[3*i];
+        for (int j = 0; j < dt->P_size; j++) {
+            char* Pj = &dt->P[3*j];
+            if (strcmp(Pi, Pj) == 0) {
+                // append to intersection set; 
+                int n = intersect_size*3;
+                intersect_size++;
+                intersection_set = realloc(intersection_set, intersect_size*3);
+                intersection_set[n] = Pj[0];
+                intersection_set[n+1] = Pj[1];
+                intersection_set[n+2] = Pj[2];
+            }
+        }
+    }
+    dt->P = intersection_set;
+    dt->P_size = intersect_size;
 }
 
 int main(){
@@ -426,7 +456,55 @@ int main(){
     //
     // In the stack consuming loop:
     // Replace the cursive call to an appending to 
-    //
+
+    int highest_depth = 1;
+    for (int i = 0; i < cc; i+=2) {
+        char key[] = {Computers[i],Computers[i+1],'\0'};
+        Stack s = new_stack(free_dt);
+
+        result root = hashmap_get(connections, key);
+        if (root.found) {
+            conn_list* c = root.value;
+            stack_append(&s,new_dt(key,c->contig_store,c->conn_count));
+        }
+
+        while (s.stacklen > 0) {
+            depth_track* dt = stack_pop(&s);
+            for (int i = 0; i < dt->P_size; i++) {
+                char* next_computer = &dt->P[i*3];
+                // printf("[Key:%s]\n",next_computer);
+                result r = hashmap_get(connections,next_computer);
+                if (r.found) {
+                    conn_list* cls = r.value;
+                    // print_connections(cls);
+                    depth_track* newdt = dt_increment_old(dt, next_computer);               
+                    // for (int j = 0; j < newdt->P_size; j++) {
+                    //     printf("%s ",&newdt->P[j*3]);
+                    // }
+                    // printf("\n");
+                    takeIntersection(newdt, cls->contig_store, cls->conn_count);
+                    // for (int j = 0; j < newdt->P_size; j++) {
+                    //     printf("%s ",&newdt->P[j*3]);
+                    // }
+                    // printf("\n");
+                    if (newdt->P_size > 0) {
+                        stack_append(&s, newdt);
+                    }
+                    // printf("Com:%s %s %s\n",newdt->computers,newdt->computer,next_computer);
+                }else{
+                    if (dt->depth > highest_depth) {
+                        printf("Com:%s %s %s\n",dt->computers,dt->computer,next_computer);
+                        highest_depth = dt->depth;
+                    }
+                }
+            }
+            free_dt(dt);
+        }
+        free_stack(&s);
+    }
+
+
+
     hashmap_free(connections);
     free(Computers);
 }
