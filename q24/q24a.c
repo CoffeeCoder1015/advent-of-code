@@ -1,5 +1,8 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct{
     int length;
@@ -215,15 +218,51 @@ Key str_to_key(void* strgeneric){
     return k;
 }
 
+typedef struct{
+    char input1[4];
+    char input2[4];
+    int op_code;
+    // for preset values, only output will have a value;
+    // and for all other, output will be -1, indicating that
+    int output;
+} operation;
+
+operation* new_operation(char* input1, char* input2, int op_code, int output){
+    operation* o = malloc(sizeof(operation));
+    strcpy_s(o->input1, 4, input1);
+    strcpy_s(o->input2, 4, input2);
+    o->op_code = op_code;
+    o->output = output;
+    return o;
+}
+
+void free_operation(map_entry* e){
+    free(e->value);
+}
+
 int main(){
     FILE* inputs;
     fopen_s(&inputs, "test.txt", "r");
+
+    hashmap* mapping = hashmap_new(free_operation,str_to_key);
+
     char buffer[1024];
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
         if (buffer[0] == '\n') {
             break;;
         }
+        int n = strlen(buffer);
+        buffer[--n] = '\0';
+
+        char* sep = strchr(buffer, ':');
+        *sep = '\0';
+
+        char* value_str = sep+2;
+        int value = atoi(value_str);
+
+        operation* ox =new_operation(NULL, NULL, -1, value);
+        hashmap_set(mapping, buffer, ox);
     }
 
     for (;;) {
@@ -232,5 +271,7 @@ int main(){
             break; 
         }
     }
+
     fclose(inputs);
+    hashmap_free(mapping);
 }
