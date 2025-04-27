@@ -458,6 +458,7 @@ int main(){
                         stack_append(&s, dt_increment_old(dt, computer));
                     } 
                 }
+                free_dt(dt);
             }
         }
 
