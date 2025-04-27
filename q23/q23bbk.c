@@ -472,25 +472,14 @@ int main(){
             depth_track* dt = stack_pop(&s);
             for (int i = 0; i < dt->P_size; i++) {
                 char* next_computer = &dt->P[i*3];
-                // printf("[Key:%s]\n",next_computer);
                 result r = hashmap_get(connections,next_computer);
                 if (r.found) {
                     conn_list* cls = r.value;
-                    // print_connections(cls);
                     depth_track* newdt = dt_increment_old(dt, next_computer);               
-                    // for (int j = 0; j < newdt->P_size; j++) {
-                    //     printf("%s ",&newdt->P[j*3]);
-                    // }
-                    // printf("\n");
                     takeIntersection(newdt, cls->contig_store, cls->conn_count);
-                    // for (int j = 0; j < newdt->P_size; j++) {
-                    //     printf("%s ",&newdt->P[j*3]);
-                    // }
-                    // printf("\n");
                     if (newdt->P_size > 0) {
                         stack_append(&s, newdt);
                     }
-                    // printf("Com:%s %s %s\n",newdt->computers,newdt->computer,next_computer);
                 }else{
                     if (dt->depth > highest_depth) {
                         printf("Com:%s %s %s\n",dt->computers,dt->computer,next_computer);
