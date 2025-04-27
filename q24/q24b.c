@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 typedef struct{
     int length;
@@ -268,6 +269,8 @@ int main(){
 
     hashmap* mapping = hashmap_new(free_operation,str_to_key);
 
+    uint64_t x = 0;
+    uint64_t y = 0;
     char buffer[1024];
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
@@ -281,11 +284,21 @@ int main(){
         *sep = '\0';
 
         char* value_str = sep+2;
-        int value = atoi(value_str);
+        uint64_t value = atoi(value_str);
 
+        uint64_t id = atoll(&buffer[1]);
+        switch (buffer[0]) {
+            case 'x': 
+            x |= value << id;
+            break;
+            case 'y': 
+            y |= value << id;
+            break;
+        }
         operation* ox =new_operation(NULL, NULL, -1, value);
         hashmap_set(mapping, buffer, ox);
     }
+    printf("%llu %llu\n",x,y);
 
     int z_count = 0;
     char* z_keys = malloc(0);
