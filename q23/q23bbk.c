@@ -458,6 +458,7 @@ int main(){
     // Replace the cursive call to an appending to 
 
     int highest_depth = 1;
+    char* seq = malloc(0);
     for (int i = 0; i < cc; i+=2) {
         char key[] = {Computers[i],Computers[i+1],'\0'};
         Stack s = new_stack(free_dt);
@@ -482,8 +483,14 @@ int main(){
                     }
                 }else{
                     if (dt->depth > highest_depth) {
-                        printf("Com:%s %s %s\n",dt->computers,dt->computer,next_computer);
                         highest_depth = dt->depth;
+                        seq = realloc(seq, ( highest_depth+1 )*3);
+                        seq[0] = '\0';
+                        strcat_s(seq, 3*(highest_depth+1), dt->computers);
+                        strcat_s(seq, 3*(highest_depth+1), ",");
+                        strcat_s(seq, 3*(highest_depth+1), dt->computer);
+                        strcat_s(seq, 3*(highest_depth+1), ",");
+                        strcat_s(seq, 3*(highest_depth+1), next_computer);
                     }
                 }
             }
@@ -492,8 +499,8 @@ int main(){
         free_stack(&s);
     }
 
-
-
+    printf("%s\n",seq);
+    free(seq);
     hashmap_free(connections);
     free(Computers);
 }
