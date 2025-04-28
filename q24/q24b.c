@@ -299,7 +299,7 @@ int main(){
         hashmap_set(mapping, buffer, ox);
     }
     uint64_t expected_z = x+y;
-    printf("%llu %llu %llu\n",x,y,expected_z);
+    printf("%llu+%llu=%llu\n",x,y,expected_z);
 
     int z_count = 0;
     char* z_keys = malloc(0);
@@ -430,6 +430,72 @@ int main(){
     }
     printf("%llu\n",answer);
 
+    uint64_t check = expected_z ^ answer;
+    for (int i = 0; i < z_count; i++) {
+        uint64_t last_bit = check >> i;
+        uint64_t mask = 1;
+        last_bit&=mask;
+        if (last_bit == 1){
+            printf("Failed at %d bit\n",i);
+        }
+    }
+
+    char* op_map[] = {"AND","OR","XOR"};
+    for (int i = 0; i < z_count ; i++) {
+        char* ref = &z_keys[i*4];
+
+        int queue_size = 1;
+        char* call_queue = malloc(4);
+        call_queue[0] = '\0';
+        strcat_s(call_queue, 4, ref);
+
+        int queue_head = 0;
+
+        int code_count = 0;
+
+        while (queue_head < queue_size) {
+            int front_ref = 4*queue_head;
+            queue_head++;
+
+            char* front = &call_queue[front_ref];
+            result r = hashmap_get(mapping, front);
+            if (r.found) {
+                operation* opx = r.value; 
+
+                if (opx->op_code == -1) {
+                    // printf("%s -> %s %d\n",ref,front,opx->output);
+                    int code = atoi(&front[1]);
+                    if (front[0] == 'x' || front[0] == 'y') {
+                        code_count++; 
+                    }
+                    if (code_count >= 4) {
+                        break; 
+                    }
+                    continue;
+                }
+
+                char* operation_as_str = op_map[opx->op_code];
+                printf("%s <- %s %s %s\n",front,opx->input1,operation_as_str,opx->input2);
+
+                call_queue = realloc(call_queue, 4*( queue_size+2 ));
+                queue_size++;
+                int ref = 4*(queue_size-1);
+                call_queue[ref] = opx->input1[0];
+                call_queue[ref+1] = opx->input1[1];
+                call_queue[ref+2] = opx->input1[2];
+                call_queue[ref+3] = '\0';
+                queue_size++;
+                ref = 4*(queue_size-1);
+                call_queue[ref] = opx->input2[0];
+                call_queue[ref+1] = opx->input2[1];
+                call_queue[ref+2] = opx->input2[2];
+                call_queue[ref+3] = '\0';
+            }
+        }
+        printf("\n");
+
+        free(call_queue);
+    }
     free(z_keys);
     hashmap_free(mapping);
 }
