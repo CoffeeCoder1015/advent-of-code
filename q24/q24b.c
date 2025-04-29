@@ -224,6 +224,8 @@ Key str_to_key(void* strgeneric){
 typedef struct{
     char input1[4];
     char input2[4];
+    int outputs_count;
+    char* outputs;
     int op_code;
     // for preset values, only output will have a value;
     // and for all other, output will be -1, indicating that
@@ -236,11 +238,37 @@ operation* new_operation(char* input1, char* input2, int op_code, int output){
     strcpy_s(o->input2, 4, input2);
     o->op_code = op_code;
     o->output = output;
+    o->outputs_count = 0;
+    o->outputs = malloc(0);
     return o;
 }
 
 void free_operation(map_entry* e){
+    operation* o = e->value;
+    free(o->outputs);
     free(e->value);
+}
+
+void insert_output(operation* o, char* output){
+    int index = o->outputs_count;
+    o->outputs_count++;
+    o->outputs = realloc(o->outputs, o->outputs_count*4);
+    o->outputs[index] = output[0];
+    o->outputs[index+1] = output[1];
+    o->outputs[index+2] = output[2];
+    o->outputs[index+3] = '\0';
+}
+
+void print_outputs(operation* o){
+    for (int i = 0;  i < o->outputs_count; i++) {
+        char* ref = &o->outputs[i*4];
+        printf("%s;",ref);
+    }
+    printf("\n");
+}
+
+char* get_output(operation* o, int index){
+    return &o->outputs[4*index];
 }
 
 void z_isort(char* str_array, int n){
@@ -438,7 +466,7 @@ int main(){
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
         if (buffer[0] == '\n') {
-            break;;
+            break;
         }
         int n = strlen(buffer);
         buffer[--n] = '\0';
@@ -497,6 +525,17 @@ int main(){
         }
         operation* ox = new_operation(i1, i2, opcode, -1);
         hashmap_set(mapping,out,ox);
+
+        result r1 = hashmap_get(mapping, i1);
+        if (r1.found) {
+            operation* i1Op = r1.value; 
+            insert_output(i1Op, out);
+        }
+        result r2 = hashmap_get(mapping, i2);
+        if (r2.found) {
+            operation* i2Op = r2.value; 
+            insert_output(i2Op, out);
+        }
 
         if (out[0] == 'z') {
             z_count++; 
