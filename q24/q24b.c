@@ -544,7 +544,8 @@ int main(){
         // must output to OR
         // except for the AND from the 0th bit 
         // which will go directly into the next adder
-        if (o->op_code == 0  ) {
+        bool from_0th_bit = strcmp(o->input1, "x00") == 0 || strcmp(o->input2, "x00") == 0;
+        if (o->op_code == 0  && !from_0th_bit) {
             for (int j = 0; j < o->outputs_count; j++) {
                 char* wire = get_output(o, j);
                 operation* sub_wire = hashmap_get(mapping, wire).value;
