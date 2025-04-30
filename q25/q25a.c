@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,15 @@ void append_pin(int* pin_count, int (**pins)[5], int pin[5]){
     }
     *pin_count = size;
     *pins = a;
+}
+
+bool key_fit(int key[5], int schem[5]){
+    for (int i = 0; i < 5; i++) {
+        if (key[0] + schem[0] > 4) {
+            return false; 
+        } 
+    }
+    return true;
 }
 
 int main(){
@@ -80,5 +90,17 @@ int main(){
     }else {
         append_pin(&key_count, &keys, pin);
     }
+    fclose(inputs);
 
+    uint64_t fit = 0;
+    for (int i = 0; i < schem_count; i++) {
+        int *schem = schems[i];
+        for (int j = 0; j < key_count; j++) {
+            int *key = keys[j];
+            if (key_fit(key, schem)) {
+               fit++;  
+            }
+        } 
+    }
+    printf("%llu\n",fit);
 }
