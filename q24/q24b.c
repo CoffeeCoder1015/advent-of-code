@@ -529,6 +529,51 @@ void print_reverse_structure(int error_count,int* error_bits, char* z_keys,hashm
     }
 }
 
+void print_forward_structure(int z_count, hashmap* mapping){
+    char* op_map[] = {"AND","OR","XOR"};
+    for (int i = 0; i < z_count; i++) {
+        char x_key[4];
+        sprintf(x_key, "x%.2d",i);
+        
+        Queue q = new_queue(free_dt);
+        
+        printf("[---Source key: %s---]\n",x_key);
+        append_queue(&q, new_dt(x_key));
+
+        while (q.queue_pointer < q.queue_size) {
+            depth_track dt = pop_queue(&q);
+            if (dt.wire[0] == 'z') {
+                print_op_chain(&dt);
+            }
+            if (dt.op_chain[dt.depth-1] == 1) {
+                print_op_chain(&dt);
+                continue; 
+            }
+            if (dt.depth > 2) {
+                continue;            
+            }
+
+            result r = hashmap_get(mapping, dt.wire);
+            if (r.found) {
+                operation* o = r.value; 
+                if (o->op_code!=-1) {
+                    char* opstr = op_map[o->op_code];
+                    printf("%d %s %s %s -> [ %s ]\n",dt.depth,o->input1,opstr,o->input2,dt.wire);
+                }
+                for (int i = 0; i  < o->outputs_count; i++) {
+                    char* next_wire = get_output(o, i);
+                    operation* o_next = hashmap_get(mapping,next_wire).value;
+                    int next_op_code = o_next->op_code;
+                    depth_track new_dt = increment_old(&dt,next_wire , next_op_code);
+                    append_queue(&q, new_dt);
+                }
+            }
+        }
+        printf("\n");
+        free_queue(&q);
+    }
+}
+
 // Basic rules
 // Layer 1:
 // XOR that takes in x & y 
@@ -667,49 +712,7 @@ int main(){
     int* error_bits = malloc(0);
     find_error_bits(expected_z, answer, z_count, &error_count, &error_bits);
     // print_reverse_structure( error_count, error_bits, z_keys, mapping);
-
-    char* op_map[] = {"AND","OR","XOR"};
-    for (int i = 0; i < z_count; i++) {
-        char x_key[4];
-        sprintf(x_key, "x%.2d",i);
-        
-        Queue q = new_queue(free_dt);
-        
-        printf("[---Source key: %s---]\n",x_key);
-        append_queue(&q, new_dt(x_key));
-
-        while (q.queue_pointer < q.queue_size) {
-            depth_track dt = pop_queue(&q);
-            if (dt.wire[0] == 'z') {
-                print_op_chain(&dt);
-            }
-            if (dt.op_chain[dt.depth-1] == 1) {
-                print_op_chain(&dt);
-                continue; 
-            }
-            if (dt.depth > 2) {
-                continue;            
-            }
-
-            result r = hashmap_get(mapping, dt.wire);
-            if (r.found) {
-                operation* o = r.value; 
-                if (o->op_code!=-1) {
-                    char* opstr = op_map[o->op_code];
-                    printf("%d %s %s %s -> [ %s ]\n",dt.depth,o->input1,opstr,o->input2,dt.wire);
-                }
-                for (int i = 0; i  < o->outputs_count; i++) {
-                    char* next_wire = get_output(o, i);
-                    operation* o_next = hashmap_get(mapping,next_wire).value;
-                    int next_op_code = o_next->op_code;
-                    depth_track new_dt = increment_old(&dt,next_wire , next_op_code);
-                    append_queue(&q, new_dt);
-                }
-            }
-        }
-        printf("\n");
-        free_queue(&q);
-    }
+    print_forward_structure(z_count, mapping);
     
     free(error_bits);
     free(z_keys);
