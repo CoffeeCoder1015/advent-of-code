@@ -272,7 +272,7 @@ char* get_output(operation* o, int index){
     return &o->outputs[4*index];
 }
 
-void z_isort(char* str_array, int n){
+void isort(char* str_array, int n){
     for (int i = 1; i < n; i++) {
         char* ref = &str_array[i*4];
         int refn = atoi(&ref[1]);
@@ -292,89 +292,6 @@ void z_isort(char* str_array, int n){
     }
 }
 
-uint64_t simulate(hashmap* mapping, int z_count, char* z_keys){
-    uint64_t answer = 0;
-    for (int i = 0; i < z_count ; i++) {
-        char* ref = &z_keys[i*4];
-
-        int stack_size = 1;
-        char* call_stack = malloc(4);
-        call_stack[0] = '\0';
-        strcat_s(call_stack, 4, ref);
-
-        while (stack_size > 0) {
-            int front_ref = 4*( stack_size-1 );
-            char* front = &call_stack[front_ref];
-            result r = hashmap_get(mapping, front);
-            if (r.found) {
-                operation* opx = r.value; 
-                // check if self has a filled output
-                if (opx->output != -1) {
-                    stack_size--;
-                    continue; 
-                }
-                // check for input 1 for a filled output
-                result i1 = hashmap_get(mapping, opx->input1);
-                int i1v = -1;
-                if (i1.found) {
-                    operation* i1_op = i1.value;         
-                    if (i1_op->output == -1){
-                        stack_size++;
-                        call_stack = realloc(call_stack, 4*stack_size);
-                        int ref = 4*(stack_size-1);
-                        call_stack[ref] = opx->input1[0];
-                        call_stack[ref+1] = opx->input1[1];
-                        call_stack[ref+2] = opx->input1[2];
-                        call_stack[ref+3] = '\0';
-                        continue;
-                    }
-                    i1v = i1_op->output;
-                }
-                // check for input 2 for a filled output
-                result i2 = hashmap_get(mapping, opx->input2);
-                int i2v = -1;
-                if (i2.found) {
-                    operation* i2_op = i2.value;         
-                    if (i2_op->output == -1){
-                        stack_size++;
-                        call_stack = realloc(call_stack, 4*stack_size);
-                        int ref = 4*(stack_size-1);
-                        call_stack[ref] = opx->input2[0];
-                        call_stack[ref+1] = opx->input2[1];
-                        call_stack[ref+2] = opx->input2[2];
-                        call_stack[ref+3] = '\0';
-                        continue;
-                    }
-                    i2v = i2_op->output;
-                }
-                // set output value
-                switch (opx->op_code) {
-                    case 0:
-                        opx->output = i1v & i2v;
-                    break;
-                    case 1:
-                        opx->output = i1v | i2v;
-                    break;
-                    case 2:
-                        opx->output = i1v ^ i2v;
-                    break;
-                }
-            }
-        }
-
-        free(call_stack);
-
-        result r = hashmap_get(mapping, ref);
-        if (r.found) {
-            operation* of = r.value;
-            int shift_count = z_count-i-1;
-            uint64_t formatted_leading = of->output;
-            formatted_leading <<= shift_count;
-            answer ^= formatted_leading;  
-        }
-    }
-    return answer;
-}
 
 // track the traversal depth
 typedef struct{
@@ -516,8 +433,6 @@ int main(){
     uint64_t expected_z = x+y;
     printf("%llu+%llu=%llu\n",x,y,expected_z);
 
-    int z_count = 0;
-    char* z_keys = malloc(0);
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
         if (end == NULL) {
@@ -557,20 +472,9 @@ int main(){
         keys[index+1] = out[1];
         keys[index+2] = out[2];
         keys[index+3] = '\0';
-
-
-        if (out[0] == 'z') {
-            z_count++; 
-            z_keys = realloc(z_keys, 4*z_count);
-            int ref = 4*(z_count-1);
-            z_keys[ref] = out[0];
-            z_keys[ref+1] = out[1];
-            z_keys[ref+2] = out[2];
-            z_keys[ref+3] = '\0';
-        }
     }
     fclose(inputs);
-    z_isort(z_keys, z_count);
+    isort(keys,key_count);
 
     for (int i = 0;  i < key_count; i++) {
         char* key = &keys[i*4];
@@ -581,9 +485,6 @@ int main(){
         insert_output(o2, key);
     }
 
-    uint64_t answer = simulate(mapping, z_count, z_keys);
-    printf("%llu\n",answer);
     
-    free(z_keys);
     hashmap_free(mapping);
 }
