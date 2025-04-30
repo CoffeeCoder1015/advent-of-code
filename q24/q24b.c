@@ -376,25 +376,6 @@ uint64_t simulate(hashmap* mapping, int z_count, char* z_keys){
     return answer;
 }
 
-void find_error_bits(uint64_t expected_z, uint64_t answer, int z_count, int* error_count, int** error_bits){
-    int error_count_internal = *error_count;
-    int* error_bits_internal = *error_bits;
-    uint64_t check = expected_z ^ answer;
-    for (int i = 0; i < z_count; i++) {
-        uint64_t last_bit = check >> i;
-        uint64_t mask = 1;
-        last_bit&=mask;
-        if (last_bit == 1){
-            printf("failed at %d bit\n",i);
-            error_count_internal++;
-            error_bits_internal = realloc(error_bits_internal, sizeof(int)*error_count_internal);
-            error_bits_internal[error_count_internal-1] = z_count-i-1;
-        }
-    }
-    *error_count = error_count_internal;
-    *error_bits =  error_bits_internal;
-}
-
 // track the traversal depth
 typedef struct{
     int depth;
@@ -468,111 +449,6 @@ depth_track pop_queue(Queue* q){
     return q->array[q->queue_pointer++];
 }
 
-
-void print_reverse_structure(int error_count,int* error_bits, char* z_keys,hashmap* mapping){
-    char* op_map[] = {"AND","OR","XOR"};
-    for (int i = 0; i < error_count ; i++) {
-        int bit_index = error_bits[i];
-        char* ref = &z_keys[bit_index*4];
-
-        int queue_size = 1;
-        char* call_queue = malloc(4);
-        call_queue[0] = '\0';
-        strcat_s(call_queue, 4, ref);
-
-        int queue_head = 0;
-
-        int code_count = 0;
-
-        while (queue_head < queue_size) {
-            int front_ref = 4*queue_head;
-            queue_head++;
-
-            char* front = &call_queue[front_ref];
-            result r = hashmap_get(mapping, front);
-            if (r.found) {
-                operation* opx = r.value; 
-
-                if (opx->op_code == -1) {
-                    // printf("%s -> %s %d\n",ref,front,opx->output);
-                    int code = atoi(&front[1]);
-                    if (front[0] == 'x' || front[0] == 'y') {
-                        code_count++; 
-                    }
-                    if (code_count >= 4) {
-                        break; 
-                    }
-                    continue;
-                }
-
-                char* operation_as_str = op_map[opx->op_code];
-                printf("%s <- %s %s %s\n",front,opx->input1,operation_as_str,opx->input2);
-
-                call_queue = realloc(call_queue, 4*( queue_size+2 ));
-                queue_size++;
-                int ref = 4*(queue_size-1);
-                call_queue[ref] = opx->input1[0];
-                call_queue[ref+1] = opx->input1[1];
-                call_queue[ref+2] = opx->input1[2];
-                call_queue[ref+3] = '\0';
-                queue_size++;
-                ref = 4*(queue_size-1);
-                call_queue[ref] = opx->input2[0];
-                call_queue[ref+1] = opx->input2[1];
-                call_queue[ref+2] = opx->input2[2];
-                call_queue[ref+3] = '\0';
-            }
-        }
-        printf("\n");
-
-        free(call_queue);
-    }
-}
-
-void print_forward_structure(int z_count, hashmap* mapping){
-    char* op_map[] = {"AND","OR","XOR"};
-    for (int i = 0; i < z_count; i++) {
-        char x_key[4];
-        sprintf(x_key, "x%.2d",i);
-        
-        Queue q = new_queue(free_dt);
-        
-        printf("[---Source key: %s---]\n",x_key);
-        append_queue(&q, new_dt(x_key));
-
-        while (q.queue_pointer < q.queue_size) {
-            depth_track dt = pop_queue(&q);
-            if (dt.wire[0] == 'z') {
-                print_op_chain(&dt);
-            }
-            if (dt.op_chain[dt.depth-1] == 1) {
-                print_op_chain(&dt);
-                continue; 
-            }
-            if (dt.depth > 2) {
-                continue;            
-            }
-
-            result r = hashmap_get(mapping, dt.wire);
-            if (r.found) {
-                operation* o = r.value; 
-                if (o->op_code!=-1) {
-                    char* opstr = op_map[o->op_code];
-                    printf("%d %s %s %s -> [ %s ]\n",dt.depth,o->input1,opstr,o->input2,dt.wire);
-                }
-                for (int i = 0; i  < o->outputs_count; i++) {
-                    char* next_wire = get_output(o, i);
-                    operation* o_next = hashmap_get(mapping,next_wire).value;
-                    int next_op_code = o_next->op_code;
-                    depth_track new_dt = increment_old(&dt,next_wire , next_op_code);
-                    append_queue(&q, new_dt);
-                }
-            }
-        }
-        printf("\n");
-        free_queue(&q);
-    }
-}
 
 // Basic rules
 // Layer 1:
@@ -707,14 +583,7 @@ int main(){
 
     uint64_t answer = simulate(mapping, z_count, z_keys);
     printf("%llu\n",answer);
-
-    int error_count = 0;
-    int* error_bits = malloc(0);
-    find_error_bits(expected_z, answer, z_count, &error_count, &error_bits);
-    // print_reverse_structure( error_count, error_bits, z_keys, mapping);
-    print_forward_structure(z_count, mapping);
     
-    free(error_bits);
     free(z_keys);
     hashmap_free(mapping);
 }
