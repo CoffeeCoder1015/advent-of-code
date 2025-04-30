@@ -41,7 +41,7 @@ bool key_fit(int key[5], int schem[5]){
 
 int main(){
     FILE* inputs;
-    fopen_s(&inputs, "test.txt", "r");
+    fopen_s(&inputs, "q25.txt", "r");
 
 
     int key_count = 0;
