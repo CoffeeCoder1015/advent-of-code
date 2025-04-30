@@ -274,14 +274,10 @@ char* get_output(operation* o, int index){
 
 void isort(char* str_array, int n){
     for (int i = 1; i < n; i++) {
-        char* ref = &str_array[i*4];
-        int refn = atoi(&ref[1]);
         for (int j = i-1; j >= 0; j--) {
             char* jref = &str_array[j*4];
-            int jrefn = atoi(&jref[1]);
             char* jref2 = &str_array[(j+1)*4];
-            int jrefn2 = atoi(&jref2[1]);
-            if (jrefn < jrefn2) {
+            if (strcmp(jref, jref2) > 0) {
                 for (int k = 0; k < 3; k++) {
                     jref[k] ^= jref2[k];
                     jref2[k] ^= jref[k];
