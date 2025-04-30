@@ -289,79 +289,6 @@ void isort(char* str_array, int n){
 }
 
 
-// track the traversal depth
-typedef struct{
-    int depth;
-    char start[4];
-    char wire[4];
-    int* op_chain;
-} depth_track;
-
-depth_track new_dt(char wire[4]){
-    depth_track dt = {0,{wire[0],wire[1],wire[2],wire[3]},{wire[0],wire[1],wire[2],wire[3]},malloc(0)};
-    return dt;
-}
-
-void free_dt(depth_track* dt){
-    free(dt->op_chain);
-}
-
-void print_op_chain(depth_track* dt){
-    char* op_map[] = {"AND","OR","XOR"};
-    for (int i = 0; i < dt->depth; i++) {
-        int op_code = dt->op_chain[i];
-        printf("%s,",op_map[op_code]);
-    }
-    printf("\n");
-}
-
-depth_track increment_old(depth_track* dt, char* wire,  int op_code){
-    size_t new_size = sizeof(int)*( dt->depth + 1 );
-    size_t old_size = sizeof(int)*( dt->depth);
-    char* s = dt->start;
-    depth_track new_dt = {
-        .depth = dt->depth+1,
-        .start = {s[0],s[1],s[2],s[3]},
-        .wire = {wire[0],wire[1],wire[2],wire[3]},
-        .op_chain = malloc(new_size)
-    };
-    memcpy_s(new_dt.op_chain,new_size,dt->op_chain,old_size);
-    new_dt.op_chain[new_dt.depth-1] = op_code;
-    return new_dt;
-}
-
-typedef struct{
-    int queue_cap;
-    int queue_size;
-    int queue_pointer;
-    depth_track* array;
-    void ( *free_queue )(depth_track*);
-} Queue;
-
-Queue new_queue(void ( *free_queue )(depth_track*)){
-    return (Queue){10,0,0,malloc(sizeof(depth_track)*10),free_queue};
-}
-
-void free_queue(Queue* q){
-    for (int i = 0;  i < q->queue_size; i++) {
-        q->free_queue(&q->array[i]);
-    }
-    free(q->array);
-}
-
-void append_queue(Queue* q, depth_track item){
-    int index = q->queue_size++;
-    if (q->queue_size > q->queue_cap ) {
-        q->queue_cap += 20;
-        q->array = realloc(q->array, sizeof(depth_track)*q->queue_cap);
-    }
-    q->array[index] = item;
-}
-
-depth_track pop_queue(Queue* q){
-    return q->array[q->queue_pointer++];
-}
-
 void append_str(int* array_size, char** array,char* str){
     int size = *array_size;
     char* a = *array;
@@ -414,8 +341,6 @@ int main(){
 
     hashmap* mapping = hashmap_new(free_operation,str_to_key);
 
-    uint64_t x = 0;
-    uint64_t y = 0;
     char buffer[1024];
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
@@ -431,20 +356,9 @@ int main(){
         char* value_str = sep+2;
         uint64_t value = atoi(value_str);
 
-        uint64_t id = atoll(&buffer[1]);
-        switch (buffer[0]) {
-            case 'x': 
-            x |= value << id;
-            break;
-            case 'y': 
-            y |= value << id;
-            break;
-        }
         operation* ox =new_operation(NULL, NULL, -1, value);
         hashmap_set(mapping, buffer, ox);
     }
-    uint64_t expected_z = x+y;
-    printf("%llu+%llu=%llu\n",x,y,expected_z);
 
     for (;;) {
         char* end = fgets(buffer, 1024, inputs);
