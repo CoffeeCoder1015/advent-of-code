@@ -366,6 +366,23 @@ depth_track pop_queue(Queue* q){
     return q->array[q->queue_pointer++];
 }
 
+void append_str(int* array_size, char** array,char* str){
+    int size = *array_size;
+    char* a = *array;
+    int index = size*4;
+    size++;
+    a = realloc(a, size*4);
+    if (index > 0) {
+        a[index-1]  = ',';
+    }
+    a[index] = str[0];
+    a[index+1] = str[1];
+    a[index+2] = str[2];
+    a[index+3] = '\0';
+    *array_size = size;
+    *array = a;
+}
+
 
 // Basic rules
 // Layer 1:
@@ -485,6 +502,68 @@ int main(){
         insert_output(o2, key);
     }
 
-    
+    hashmap* visited = hashmap_new(NULL, str_to_key);
+
+    int wrong_count = 0;
+    char* wrong_wires = malloc(0);
+
+    for (int i = 0;  i < key_count; i++) {
+        char* key = &keys[i*4];
+        operation* o = hashmap_get(mapping, key).value;
+        // result check = hashmap_get(visited, key);
+        // XOR analysis
+        // 1.
+        // if is of form A XOR B -> C
+        // and A not x or y
+        // and B not x or y
+        // and c not z
+        //
+        // 2. 
+        // if C is z and not of form
+        // A OP B -> C, where OP is not XOR
+        // except for z45 which is a carry bit
+        //
+        // 3. 
+        // XOR never outputs to OR
+        bool isz = key[0] == 'z';
+        bool failed = false;
+        if (o->op_code == 2) {
+            bool first_valid = 'x' == o->input1[0]  || 'y' == o->input1[0];
+            bool second_valid = 'x' == o->input2[0]  || 'y' == o->input2[0];
+            failed = !first_valid && !second_valid && !isz;
+
+            for (int j = 0; j < o->outputs_count; j++) {
+                char* sub_wire_key = get_output(o, j);
+                operation* sub_wire = hashmap_get(mapping, sub_wire_key).value;
+                if (sub_wire->op_code == 1) {
+                    failed = true; 
+                    break;
+                }
+            }
+        }else {
+            failed = isz && strcmp("z45", key);
+        }
+
+        // AND analysis
+        // must output to OR
+        // except for the AND from the 0th bit 
+        // which will go directly into the next adder
+        if (o->op_code == 0  ) {
+            for (int j = 0; j < o->outputs_count; j++) {
+                char* wire = get_output(o, j);
+                operation* sub_wire = hashmap_get(mapping, wire).value;
+                if ( sub_wire->op_code != 1){
+                    failed = true;
+                    break;
+                }
+            }
+        }
+
+        if (failed) {
+            append_str(&wrong_count, &wrong_wires, key) ;
+        }
+    }
+    printf("%s\n",wrong_wires);
+    hashmap_free(visited);
     hashmap_free(mapping);
 }
