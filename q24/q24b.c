@@ -250,7 +250,7 @@ void free_operation(map_entry* e){
 }
 
 void insert_output(operation* o, char* output){
-    int index = o->outputs_count;
+    int index = o->outputs_count*4;
     o->outputs_count++;
     o->outputs = realloc(o->outputs, o->outputs_count*4);
     o->outputs[index] = output[0];
@@ -394,6 +394,45 @@ void find_error_bits(uint64_t expected_z, uint64_t answer, int z_count, int* err
     *error_bits =  error_bits_internal;
 }
 
+// track the traversal depth
+typedef struct{
+    int depth;
+    char wire[4];
+} depth_track;
+
+depth_track new_dt(int depth, char wire[4]){
+    return (depth_track){depth,{wire[0],wire[1],wire[2],wire[3]}};
+}
+
+typedef struct{
+    int queue_cap;
+    int queue_size;
+    int queue_pointer;
+    depth_track* array;
+} Queue;
+
+Queue new_queue(){
+    return (Queue){10,0,0,malloc(sizeof(depth_track)*10)};
+}
+
+void free_queue(Queue* q){
+    free(q->array);
+}
+
+void append_queue(Queue* q, depth_track item){
+    int index = q->queue_size++;
+    if (q->queue_size > q->queue_cap ) {
+        q->queue_cap += 20;
+        q->array = realloc(q->array, sizeof(depth_track)*q->queue_cap);
+    }
+    q->array[index] = item;
+}
+
+depth_track pop_queue(Queue* q){
+    return q->array[q->queue_pointer++];
+}
+
+
 void print_reverse_structure(int error_count,int* error_bits, char* z_keys,hashmap* mapping){
     char* op_map[] = {"AND","OR","XOR"};
     for (int i = 0; i < error_count ; i++) {
@@ -457,6 +496,9 @@ void print_reverse_structure(int error_count,int* error_bits, char* z_keys,hashm
 int main(){
     FILE* inputs;
     fopen_s(&inputs, "q24.txt", "r");
+
+    int key_count = 0;
+    char* keys = malloc(0);
 
     hashmap* mapping = hashmap_new(free_operation,str_to_key);
 
@@ -526,16 +568,14 @@ int main(){
         operation* ox = new_operation(i1, i2, opcode, -1);
         hashmap_set(mapping,out,ox);
 
-        result r1 = hashmap_get(mapping, i1);
-        if (r1.found) {
-            operation* i1Op = r1.value; 
-            insert_output(i1Op, out);
-        }
-        result r2 = hashmap_get(mapping, i2);
-        if (r2.found) {
-            operation* i2Op = r2.value; 
-            insert_output(i2Op, out);
-        }
+        int index = key_count*4;
+        key_count++;
+        keys = realloc(keys, key_count*4);
+        keys[index] = out[0];
+        keys[index+1] = out[1];
+        keys[index+2] = out[2];
+        keys[index+3] = '\0';
+
 
         if (out[0] == 'z') {
             z_count++; 
@@ -550,14 +590,55 @@ int main(){
     fclose(inputs);
     z_isort(z_keys, z_count);
 
+    for (int i = 0;  i < key_count; i++) {
+        char* key = &keys[i*4];
+        operation* o = hashmap_get(mapping, key).value;
+        operation* o1  = hashmap_get(mapping, o->input1).value;
+        operation* o2  = hashmap_get(mapping, o->input2).value;
+        insert_output(o1, key);
+        insert_output(o2, key);
+    }
+
     uint64_t answer = simulate(mapping, z_count, z_keys);
     printf("%llu\n",answer);
 
     int error_count = 0;
     int* error_bits = malloc(0);
     find_error_bits(expected_z, answer, z_count, &error_count, &error_bits);
-    print_reverse_structure( error_count, error_bits, z_keys, mapping);
+    // print_reverse_structure( error_count, error_bits, z_keys, mapping);
 
+    char* op_map[] = {"AND","OR","XOR"};
+    for (int i = 0; i < z_count; i++) {
+        char x_key[4];
+        sprintf(x_key, "x%.2d",i);
+        
+        Queue q = new_queue();
+        
+        printf("[---Source key: %s---]\n",x_key);
+        append_queue(&q, new_dt(0, x_key));
+
+        while (q.queue_pointer < q.queue_size) {
+            depth_track dt = pop_queue(&q);
+            if (dt.depth > 3) {
+                continue;            
+            }
+
+            result r = hashmap_get(mapping, dt.wire);
+            if (r.found) {
+                operation* o = r.value; 
+                if (o->op_code!=-1) {
+                    char* opstr = op_map[o->op_code];
+                    printf("%d %s %s %s -> [ %s ]\n",dt.depth,o->input1,opstr,o->input2,dt.wire);
+                }
+                for (int i = 0; i  < o->outputs_count; i++) {
+                    char* next_wire = get_output(o, i);
+                    append_queue(&q, new_dt(dt.depth+1, next_wire));
+                }
+            }
+        }
+        printf("\n");
+    }
+    
     free(error_bits);
     free(z_keys);
     hashmap_free(mapping);
