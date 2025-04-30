@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <complex.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -397,11 +398,42 @@ void find_error_bits(uint64_t expected_z, uint64_t answer, int z_count, int* err
 // track the traversal depth
 typedef struct{
     int depth;
+    char start[4];
     char wire[4];
+    int* op_chain;
 } depth_track;
 
-depth_track new_dt(int depth, char wire[4]){
-    return (depth_track){depth,{wire[0],wire[1],wire[2],wire[3]}};
+depth_track new_dt(char wire[4]){
+    depth_track dt = {0,{wire[0],wire[1],wire[2],wire[3]},{wire[0],wire[1],wire[2],wire[3]},malloc(0)};
+    return dt;
+}
+
+void free_dt(depth_track* dt){
+    free(dt->op_chain);
+}
+
+void print_op_chain(depth_track* dt){
+    char* op_map[] = {"AND","OR","XOR"};
+    for (int i = 0; i < dt->depth; i++) {
+        int op_code = dt->op_chain[i];
+        printf("%s,",op_map[op_code]);
+    }
+    printf("\n");
+}
+
+depth_track increment_old(depth_track* dt, char* wire,  int op_code){
+    size_t new_size = sizeof(int)*( dt->depth + 1 );
+    size_t old_size = sizeof(int)*( dt->depth);
+    char* s = dt->start;
+    depth_track new_dt = {
+        .depth = dt->depth+1,
+        .start = {s[0],s[1],s[2],s[3]},
+        .wire = {wire[0],wire[1],wire[2],wire[3]},
+        .op_chain = malloc(new_size)
+    };
+    memcpy_s(new_dt.op_chain,new_size,dt->op_chain,old_size);
+    new_dt.op_chain[new_dt.depth-1] = op_code;
+    return new_dt;
 }
 
 typedef struct{
@@ -409,13 +441,17 @@ typedef struct{
     int queue_size;
     int queue_pointer;
     depth_track* array;
+    void ( *free_queue )(depth_track*);
 } Queue;
 
-Queue new_queue(){
-    return (Queue){10,0,0,malloc(sizeof(depth_track)*10)};
+Queue new_queue(void ( *free_queue )(depth_track*)){
+    return (Queue){10,0,0,malloc(sizeof(depth_track)*10),free_queue};
 }
 
 void free_queue(Queue* q){
+    for (int i = 0;  i < q->queue_size; i++) {
+        q->free_queue(&q->array[i]);
+    }
     free(q->array);
 }
 
@@ -612,14 +648,21 @@ int main(){
         char x_key[4];
         sprintf(x_key, "x%.2d",i);
         
-        Queue q = new_queue();
+        Queue q = new_queue(free_dt);
         
         printf("[---Source key: %s---]\n",x_key);
-        append_queue(&q, new_dt(0, x_key));
+        append_queue(&q, new_dt(x_key));
 
         while (q.queue_pointer < q.queue_size) {
             depth_track dt = pop_queue(&q);
-            if (dt.depth > 3) {
+            if (dt.wire[0] == 'z') {
+                print_op_chain(&dt);
+            }
+            if (dt.op_chain[dt.depth-1] == 1) {
+                print_op_chain(&dt);
+                continue; 
+            }
+            if (dt.depth > 2) {
                 continue;            
             }
 
@@ -632,11 +675,15 @@ int main(){
                 }
                 for (int i = 0; i  < o->outputs_count; i++) {
                     char* next_wire = get_output(o, i);
-                    append_queue(&q, new_dt(dt.depth+1, next_wire));
+                    operation* o_next = hashmap_get(mapping,next_wire).value;
+                    int next_op_code = o_next->op_code;
+                    depth_track new_dt = increment_old(&dt,next_wire , next_op_code);
+                    append_queue(&q, new_dt);
                 }
             }
         }
         printf("\n");
+        free_queue(&q);
     }
     
     free(error_bits);
