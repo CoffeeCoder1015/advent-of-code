@@ -32,7 +32,7 @@ void append_pin(int* pin_count, int (**pins)[5], int pin[5]){
 
 bool key_fit(int key[5], int schem[5]){
     for (int i = 0; i < 5; i++) {
-        if (key[0] + schem[0] > 4) {
+        if (key[i] + schem[i] > 5) {
             return false; 
         } 
     }
