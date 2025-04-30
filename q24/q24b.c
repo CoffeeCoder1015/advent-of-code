@@ -529,6 +529,31 @@ void print_reverse_structure(int error_count,int* error_bits, char* z_keys,hashm
     }
 }
 
+// Basic rules
+// Layer 1:
+// XOR that takes in x & y 
+// - must output to XOR 
+// - must output to AND which takes in OR from previous adder
+//
+// AND that takes in x&y 
+// - Take in x&y
+// - must output to OR 
+//
+// Layer 2:
+// OR
+// - must take in 2 ANDs
+// - > Output to a AND and a XOR
+//
+// AND (carry bit)
+// - must take in OR from previous adder
+// - must take in XOR from this adder
+// - > output to a OR
+//
+// Layer 3:
+// XOR
+// - must take in XOR & OR
+// - > must output to z
+
 int main(){
     FILE* inputs;
     fopen_s(&inputs, "q24.txt", "r");
