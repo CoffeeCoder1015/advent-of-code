@@ -134,6 +134,7 @@ void matrix_Gaussian_Elim(double** M, int rows, int columns){
             // printf("%f\n",m_factor);
             matrix_row_add_other_with_factor(M, rows, columns, -m_factor, reduce_row, crow);
         }
+        ccolumn++;
     }
 }
 
