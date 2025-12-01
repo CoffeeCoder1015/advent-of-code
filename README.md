@@ -1,1 +1,1 @@
-![banner 2024](banner.png)
+[![banner 2024](banner.png)](/2024/)
