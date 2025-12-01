@@ -20,7 +20,12 @@
             ocamlPkgs.merlin
             ocamlPkgs.ocamlformat
           ];
+
+          shellHook = ''
+          echo Hello from the camel!
+          '';
         };
+
 
         packages.default = ocamlPkgs.ocaml;
       });
