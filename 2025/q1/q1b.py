@@ -34,6 +34,5 @@ for i in instructions:
             if pointer < 0:
                 pointer += 100
             counter += int(pointer == 0)
-    print(i,counter)
 
 print(counter)
