@@ -36,12 +36,11 @@ let solve ans range =
   let first_no = int_of_string (List.nth splited 0) in
   let second_no = int_of_string (List.nth splited 1) in
   let partial_ans = check 0 first_no second_no in
-  Printf.printf "%d %d %d\n" first_no second_no partial_ans ;
   ans+partial_ans
 ;;
 
 (* reads in entire file *)
-let in_chan = open_in "test.txt" in 
+let in_chan = open_in "q2.txt" in 
 let len = in_channel_length in_chan in
 let content = really_input_string in_chan len in
 
