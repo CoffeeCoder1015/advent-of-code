@@ -1,8 +1,8 @@
 let line_parser line_str = 
   let delta = String.sub line_str 1 (String.length line_str - 2) in
   match String.get line_str 0 with
-  | 'R' -> -( int_of_string delta  )
-  | 'L' -> int_of_string delta
+  | 'L' -> -( int_of_string delta  )
+  | 'R' -> int_of_string delta
   | _ -> assert false
 ;;
 
