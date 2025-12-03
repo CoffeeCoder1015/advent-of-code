@@ -14,21 +14,52 @@ let prime_factor n =
   aux 2 n S.empty
   ;;
 
+
+  
+  
+  
+let mask total uint_rep = 
+  let unit_length = total/uint_rep in
+  let const = 10. ** float_of_int unit_length in
+  let rec aux i ans = 
+    if i >= uint_rep then
+      ans
+    else
+      let rep_const = const ** (float_of_int i) in
+      aux (i+1) (ans+(int_of_float rep_const))
+    in
+    aux 0 0
+;;
+
+
+let eq_seg_sum first second n factor = 
+  let a_ = int_of_string first in 
+  let b_ = int_of_string second in
+  None
+;;
+
 let solve ans range = 
   let splited = split_range range in 
   let first = List.nth splited 0 in
   let second = List.nth splited 1 in
-  let a = int_of_string first  in
   let n = String.length first in
-  let b = int_of_string second in
   let m = String.length second in
     match ( n,m ) with
     | (n,m) when n = m -> 
+        Printf.printf "Equal: ";
         let factors =  prime_factor n in
         List.iter (Printf.printf "%d ") factors;
         Printf.printf "\n";
+        let print_factor f = 
+        Printf.printf "Mask:%d\n" ( mask n f ) in
+        List.iter print_factor factors;
+        eq_seg_sum first second n (List.nth factors 0);
         ans
     | (n,m) when n < m -> 
+        Printf.printf "Un-Equal %d %d: " n m;
+        let factors =  prime_factor m in
+        List.iter (Printf.printf "%d ") factors;
+        Printf.printf "\n";
         ans
     | _ -> assert false 
 ;;
