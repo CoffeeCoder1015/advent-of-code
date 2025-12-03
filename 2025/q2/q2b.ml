@@ -41,13 +41,10 @@ let arithmetic_sum first last n =
 let equal_solve first second n = 
   let factors =  prime_factor n in
     (* printing stuff *)
-    Printf.printf "%s %s\n" first second;
-    List.iter (Printf.printf "%d ") factors;
-    Printf.printf "\n";
+    (* Printf.printf "-> %s %s\n" first second; *)
     (* computing bounds *)
     let aux current_partial factor = 
       let m = mask n factor in
-      Printf.printf "Mask:%d \n" m; 
       let pref_first = capture_digit first (factor) in 
       let pref_second = capture_digit second (factor) in 
       let apply_bound mask_value prefix op bound =
@@ -74,8 +71,8 @@ let equal_solve first second n =
       else
         0
     in
-    Printf.printf "Par, mask_delta: %d %d\n" partial_sum duplicated_mask;
-    partial_sum
+    (* Printf.printf "-> Par, mask_delta: %d %d\n" partial_sum duplicated_mask; *)
+    partial_sum - duplicated_mask
 ;;
 
 let solve ans range = 
@@ -84,12 +81,10 @@ let solve ans range =
   let second = List.nth splited 1 in
   let n = String.length first in
   let m = String.length second in
-    match ( n,m ) with
+  let case_ans = match ( n,m ) with
     | (n,m) when n = m -> 
-        (* equal_solve first second n; *)
-        ans
+        equal_solve first second n
     | (n,m) when n < m -> 
-        Printf.printf "True bounds: %s %s\n" first second;
         let global_upperbound = int_of_string second in
         let rec gen current current_n ans =  
           if (int_of_string current) > global_upperbound  then
@@ -101,10 +96,12 @@ let solve ans range =
             let delta = equal_solve current (string_of_int current_max) current_n in
             gen (string_of_int next_start) next_n (ans + delta)
         in
-        gen first n 0;
-        ans
-    | _ -> assert false 
-;;
+        gen first n 0
+    | _ -> 0
+      in
+    (* Printf.printf "CAns:%d\n" case_ans; *)
+    case_ans + ans
+  ;;
 
 (* reads in entire file *)
 let in_chan = open_in "q2.txt" in 
@@ -115,3 +112,4 @@ let content = really_input_string in_chan len in
 let parts = String.split_on_char ',' content in
 let ans = List.fold_left solve 0 parts in
 print_endline ( string_of_int ans )
+
