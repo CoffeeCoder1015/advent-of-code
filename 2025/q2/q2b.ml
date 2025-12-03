@@ -38,6 +38,45 @@ let arithmetic_sum first last n =
   ( first+last ) * n / 2
 ;;
 
+let equal_solve first second n = 
+  let factors =  prime_factor n in
+    (* printing stuff *)
+    Printf.printf "%s %s\n" first second;
+    List.iter (Printf.printf "%d ") factors;
+    Printf.printf "\n";
+    (* computing bounds *)
+    let aux current_partial factor = 
+      let m = mask n factor in
+      Printf.printf "Mask:%d \n" m; 
+      let pref_first = capture_digit first (factor) in 
+      let pref_second = capture_digit second (factor) in 
+      let apply_bound mask_value prefix op bound =
+        let difference = (mask_value * prefix) - (int_of_string bound) in
+        if op difference 0 then
+          match difference with
+          | n when n < 0 -> prefix + 1
+          | n when n > 0 -> prefix - 1
+          | _ -> assert false
+        else
+          prefix
+      in
+      let lower_pref = apply_bound m pref_first (<) first in
+      let upper_pref = apply_bound m pref_second (>) second in
+      let lower = m * lower_pref in
+      let upper = m * upper_pref in
+      let seq_n = upper_pref - lower_pref + 1 in
+      let partial_ans = arithmetic_sum lower upper seq_n in
+      current_partial + partial_ans
+    in
+    let partial_sum = List.fold_left aux 0 factors in
+    let duplicated_mask = if List.length factors > 1 then
+        aux 0 n
+      else
+        0
+    in
+    Printf.printf "%d %d\n" partial_sum duplicated_mask;
+;;
+
 let solve ans range = 
   let splited = split_range range in 
   let first = List.nth splited 0 in
@@ -47,38 +86,7 @@ let solve ans range =
     match ( n,m ) with
     | (n,m) when n = m -> 
         Printf.printf "Equal: ";
-        let factors =  prime_factor n in
-          (* printing stuff *)
-          List.iter (Printf.printf "%d ") factors;
-          Printf.printf "\n";
-          (* computing bounds *)
-          let aux factor = 
-            let m = mask n factor in
-            Printf.printf "Mask:%d \n" m; 
-            let pref_first = capture_digit first (factor) in 
-            let pref_second = capture_digit second (factor) in 
-            let apply_bound mask_value prefix op bound =
-              let difference = (mask_value * prefix) - (int_of_string bound) in
-              if op difference 0 then
-                match difference with
-                | n when n < 0 -> prefix + 1
-                | n when n > 0 -> prefix - 1
-                | _ -> assert false
-              else
-                prefix
-            in
-            let lower_pref = apply_bound m pref_first (<) first in
-            let upper_pref = apply_bound m pref_second (>) second in
-            let lower = m * lower_pref in
-            let upper = m * upper_pref in
-            let seq_n = upper_pref - lower_pref + 1 in
-            let partial_ans = arithmetic_sum lower upper seq_n in
-            Printf.printf "Bounds: %s %s\n" first second;
-            Printf.printf "LU bound: %d %d\n" lower upper;
-            Printf.printf "Prefixes: %d %d\n" pref_first pref_second;
-            Printf.printf "LU prefix: %d %d\n" lower_pref upper_pref;
-            Printf.printf "Sum: %d\n" partial_ans;
-          in List.iter aux factors;
+        equal_solve first second n;
         ans
     | (n,m) when n < m -> 
         Printf.printf "Un-Equal %d %d: " n m;
