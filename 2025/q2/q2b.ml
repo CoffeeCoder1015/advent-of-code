@@ -74,7 +74,8 @@ let equal_solve first second n =
       else
         0
     in
-    Printf.printf "%d %d\n" partial_sum duplicated_mask;
+    Printf.printf "Par, mask_delta: %d %d\n" partial_sum duplicated_mask;
+    partial_sum
 ;;
 
 let solve ans range = 
@@ -85,14 +86,22 @@ let solve ans range =
   let m = String.length second in
     match ( n,m ) with
     | (n,m) when n = m -> 
-        Printf.printf "Equal: ";
-        equal_solve first second n;
+        (* equal_solve first second n; *)
         ans
     | (n,m) when n < m -> 
-        Printf.printf "Un-Equal %d %d: " n m;
-        let factors =  prime_factor m in
-        List.iter (Printf.printf "%d ") factors;
-        Printf.printf "\n";
+        Printf.printf "True bounds: %s %s\n" first second;
+        let global_upperbound = int_of_string second in
+        let rec gen current current_n ans =  
+          if (int_of_string current) > global_upperbound  then
+            ans
+          else
+            let next_n = current_n + 1 in
+            let next_start = int_of_float ( 10.0 ** ( float_of_int (next_n - 1) ) ) in
+            let current_max = min ( next_start - 1 ) global_upperbound in
+            let delta = equal_solve current (string_of_int current_max) current_n in
+            gen (string_of_int next_start) next_n (ans + delta)
+        in
+        gen first n 0;
         ans
     | _ -> assert false 
 ;;
