@@ -33,20 +33,19 @@ let parse_battery_bank bank =
       let scan_chunk = String.sub chunk 0 break_point in
       let first,second,cur = prase_sub_bank scan_chunk in 
       let new_chunk = String.sub chunk ( cur+1 ) (n-cur-1) in 
-      (* Printf.printf "%d %d %s %s %d %d\n" remaining_ptrs cur chunk new_chunk first second; *)
       chunk_bank new_rem_ptrs new_chunk (ans @ [ first] @ [second] )
   in 
   let result = chunk_bank 12 bank [] in 
-  List.iter ( Printf.printf "%d " ) result;
-  print_endline "";
+  (* doing some goofy seq of int to string to int conversion *)
+  let stringed_res = String.init 12 (fun x -> ( string_of_int (List.nth result x) ).[0]) in
+  int_of_string stringed_res
 ;;
 
 let in_chan = open_in "test.txt" in
   let rec line_consumer total  = 
     match input_line in_chan with
     | line -> 
-        parse_battery_bank line;
-        line_consumer total
+        line_consumer ( total +  parse_battery_bank line)
     | exception End_of_file ->
       close_in in_chan;
       total
