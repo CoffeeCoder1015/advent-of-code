@@ -16,7 +16,6 @@
           buildInputs = [
             pkgs.ocaml
             pkgs.ocamlPackages.ocaml-lsp
-            pkgs.opam
             ocamlPkgs.ocaml
             ocamlPkgs.dune_2
             ocamlPkgs.findlib
