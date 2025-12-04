@@ -18,18 +18,15 @@ let grid_traverse w h grid =
   let cord = get_1d_coords w in
   let roll_map = Hashtbl.create 16 in
   let rec aux x y =
-    if y = h then
-      0
-    else
+    if y < h then
       let item = grid.[ cord x y ] in
       let next_x = x + 1 in
       let next_y = y + if next_x = w then 1 else 0 in
       if item = '@' then 
         Hashtbl.add roll_map (x,y) ();
-      aux (next_x mod w) next_y 
+      aux (next_x mod w) next_y;
   in
   aux 0 0;
-  let inital_count = Hashtbl.length roll_map in
   let del_keys (x,y) _ acc =
     let conv_cords = get_conv_cords x y in
     let count = Array.fold_left (fun acc (x,y) -> if Hashtbl.mem roll_map (x,y)  then acc+1 else acc) 0 conv_cords in
@@ -38,8 +35,16 @@ let grid_traverse w h grid =
     else
       acc
   in
-  let del_keys = Hashtbl.fold del_keys roll_map [] in
-  Printf.printf "%d %d\n" inital_count ( List.length del_keys );
+  let rec count_dels ans = 
+    let del_keys = Hashtbl.fold del_keys roll_map [] in
+    let n = List.length del_keys in
+    if n = 0 then
+      ans
+    else (
+       List.iter (fun (x,y) -> Hashtbl.remove roll_map (x,y)) del_keys;
+      count_dels ans+n )
+  in
+  Printf.printf "%d\n" ( count_dels 0 );
 ;;
 
 let in_chan = open_in "q4.txt" in 
