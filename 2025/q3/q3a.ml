@@ -23,7 +23,7 @@ let parse_battery_bank bank =
   10*first + second
 ;;
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q3.txt" in
   let rec line_consumer total  = 
     match input_line in_chan with
     | line -> 
