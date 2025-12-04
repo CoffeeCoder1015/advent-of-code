@@ -47,7 +47,7 @@ let grid_traverse w h grid =
   aux 0 0 0
 ;;
 
-let in_chan = open_in "test.txt" in 
+let in_chan = open_in "q4.txt" in 
   let len = in_channel_length in_chan in
   let grid = really_input_string in_chan len in 
   let w,h = get_grid_dims grid in
