@@ -8,7 +8,7 @@ let to_int_list str_list =
   List.map int_of_string str_list
 ;;
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q6.txt" in
   let length = in_channel_length in_chan in
   let lines = List.map parse_lines ( String.split_on_char '\n' ( really_input_string in_chan length ) ) in  
   let n = List.length lines in
