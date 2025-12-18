@@ -16,7 +16,7 @@ let rec load_intervals chan =
   List.sort compare ( line_consumer [] )
 ;;
 
-let in_chan = open_in "test.txt" in 
+let in_chan = open_in "q5.txt" in 
   let intervals = load_intervals in_chan in
   let rec proc_intervals ans min max remaining = 
     if ( List.length remaining  ) = 0 then
