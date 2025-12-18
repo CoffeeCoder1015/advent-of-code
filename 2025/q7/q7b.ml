@@ -1,4 +1,4 @@
-let in_chan = open_in "test.txt" in 
+let in_chan = open_in "q7.txt" in 
   let first_line = input_line in_chan in
   let n = String.length first_line in
   let start_idx = String.index first_line 'S' in
