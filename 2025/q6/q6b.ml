@@ -2,7 +2,7 @@ let vindex str_lst idx =
   List.map (fun x -> String.get x idx ) str_lst
 ;;
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q6.txt" in
   let length = in_channel_length in_chan in
   let lines = String.split_on_char '\n' ( really_input_string in_chan length ) in
   let n = List.length lines in
