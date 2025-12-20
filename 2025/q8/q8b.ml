@@ -14,7 +14,7 @@ let to_coord_array raw =
   List.map (fun x -> String.split_on_char ',' x |> str_array_to_3d) raw
 ;;
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q8.txt" in
   let length = in_channel_length in_chan in
   let raw_coords = String.split_on_char '\n' ( really_input_string in_chan length ) in
   let n = List.length raw_coords in
