@@ -14,7 +14,7 @@ let to_coord_array raw =
   List.map (fun x -> String.split_on_char ',' x |> str_array_to_3d) raw
 ;;
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q8.txt" in
   let length = in_channel_length in_chan in
   let raw_coords = String.split_on_char '\n' ( really_input_string in_chan length ) in
   (* let n = List.length raw_coords in *)
@@ -72,7 +72,7 @@ let in_chan = open_in "test.txt" in
         let new_circuits = unmatched_circuits @ [new_merged] in
         iter_n (i+1) f t new_circuits )
     in
-  let circuits = iter_n 0 10 sorted_pairings [] in
+  let circuits = iter_n 0 1000 sorted_pairings [] in
 
   let sorted_lengths = List.rev ( List.sort compare ( List.map (fun x -> Hashtbl.length x ) circuits ) ) in
   let rec mult_top_3 i acc remaining = 
