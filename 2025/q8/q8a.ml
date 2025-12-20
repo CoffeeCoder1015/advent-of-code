@@ -1,3 +1,14 @@
+(* let print_int_list ilist =
+  let n = List.length ilist in
+  List.iteri (fun i x -> 
+    if i != n-1 then
+      Printf.printf "%d," x
+    else
+      Printf.printf "%d" x
+    ) ilist
+  ;;
+ *)
+
 let to_coord_array raw = 
   let str_array_to_3d str_list = List.map (fun x -> int_of_string x) str_list in
   List.map (fun x -> String.split_on_char ',' x |> str_array_to_3d) raw
@@ -32,16 +43,6 @@ let in_chan = open_in "test.txt" in
     Hashtbl.replace set b ();
   in
   
-  let print_int_list ilist =
-    let n = List.length ilist in
-    List.iteri (fun i x -> 
-      if i != n-1 then
-        Printf.printf "%d," x
-      else
-        Printf.printf "%d" x
-      ) ilist
-    in
-
   let merge_table tab_a tab_b = 
     Hashtbl.iter (fun k () -> Hashtbl.replace tab_a k () ) tab_b;
     tab_a
@@ -73,10 +74,15 @@ let in_chan = open_in "test.txt" in
     in
   let circuits = iter_n 0 10 sorted_pairings [] in
 
-  let print_set empty_htbl = 
-    let set = Hashtbl.to_seq_keys empty_htbl in
-    Printf.printf "%d  :  " (Seq.length set) ;
-    set |> Seq.iter (fun x -> print_int_list x; print_char ' ');
-    print_newline ()
-  in
-  List.iter print_set circuits
+  let sorted_lengths = List.rev ( List.sort compare ( List.map (fun x -> Hashtbl.length x ) circuits ) ) in
+  let rec mult_top_3 i acc remaining = 
+    if i = 3 then
+      acc
+    else
+      match remaining with
+      | [] -> acc
+      | h::t -> 
+      mult_top_3 (i+1) ( acc*h ) t
+    in
+  let ans = mult_top_3 0 1 sorted_lengths in
+  Printf.printf "%d\n" ans;
