@@ -1,5 +1,5 @@
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q9.txt" in
   let length = in_channel_length in_chan in
   let file = really_input_string in_chan length in
   let str_lst_to_xy str_lst = (List.nth str_lst 0 |> int_of_string, List.nth str_lst 1 |> int_of_string) in
