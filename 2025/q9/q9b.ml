@@ -17,12 +17,29 @@ let get_compression_map coord_arr =
   Array.sort compare xa; Array.sort compare ya;
   
   (* print arrays *)
-  let print_array arr = Array.iter (Printf.printf "%d ") arr; print_newline(); in
-  print_array xa; print_array ya;
+  (* let print_array arr = Array.iter (Printf.printf "%d ") arr; print_newline(); in
+  print_array xa; print_array ya; *)
+  let compressed_n = Array.length xa in
+  
+  let x_to_comped = Hashtbl.create compressed_n in
+  let y_to_comped = Hashtbl.create compressed_n in
+  
+  let rec add_to_maps i =
+    if i = compressed_n then
+      ()
+    else
+      let current_x = xa.(i) in
+      let current_y = ya.(i) in
+      Hashtbl.add x_to_comped current_x i;
+      Hashtbl.add y_to_comped current_y i;
+    add_to_maps (i+1) 
+    in
+  add_to_maps 0;
+  (x_to_comped,y_to_comped)
 ;;
 
 
-let in_chan = open_in "q9.txt" in
+let in_chan = open_in "test.txt" in
   let length = in_channel_length in_chan in
   let file = really_input_string in_chan length in
   let str_lst_to_xy str_lst = (List.nth str_lst 0 |> int_of_string, List.nth str_lst 1 |> int_of_string) in
@@ -46,9 +63,77 @@ let in_chan = open_in "q9.txt" in
       let acc2_result = chi 0 [] in
       let new_acc =Array.append (acc2_result |> Array.of_list) acc in
       par (i+1) new_acc
+  in
+  let acc = par 0 [||] in
+  Array.sort (fun (_,_,a) (_,_,b) -> b-a) acc;
+  (* Array.iter (fun ((a,b),(c,d),e) -> Printf.printf "(%d,%d) (%d,%d) %d\n" a b c d e ) acc; *)
+  let xmap, ymap = get_compression_map coords in
+  let x_range,y_range = Hashtbl.length xmap, Hashtbl.length ymap in
+  let compress_coords (og_x,og_y) = 
+    let new_x = Hashtbl.find xmap og_x in 
+    let new_y = Hashtbl.find ymap og_y in
+    (new_x,new_y)
+  in
+  let raster = Array.make_matrix x_range y_range 0 in
+  let comprssed_coords = Array.map compress_coords coords in
+  let loop_edges y = 
+    (* find horizontal intervals and vertical intersections on y-scanline*)
+    let rec helper i lst_v lst_h = 
+      if i = n then
+        lst_v, lst_h
+      else
+        let (curx,cury) = comprssed_coords.(i) in
+        let (nxtx,nxty) = comprssed_coords.(( i+1 ) mod n) in
+        let l,u = ( min cury nxty ), ( max cury nxty ) in
+        if l <= y && y < u then
+          helper (i+1) (curx :: lst_v) lst_h
+        else if l = y && u =  y then
+          helper (i+1) lst_v ((min curx nxtx,max curx nxtx) :: lst_h )
+        else
+          helper (i+1) lst_v lst_h
     in
-    let acc = par 0 [||] in
-    Array.sort (fun (_,_,a) (_,_,b) -> b-a) acc;
-    Array.iter (fun ((a,b),(c,d),e) -> Printf.printf "(%d,%d) (%d,%d) %d\n" a b c d e ) acc;
-    get_compression_map coords
-    
+    let vert_cords, hori_intervals =  ( fun ( x,y ) -> (Array.of_list x, Array.of_list y) )  ( helper 0 [] [] ) in
+    Array.sort compare vert_cords;
+    let vert_n = Array.length vert_cords in
+    let rec form_intervals i intervals = 
+      if i+1 >= vert_n then
+        intervals
+      else
+        let current = vert_cords.(i) in
+        let next = vert_cords.(i+1) in
+        let new_arr = Array.append intervals [|(current,next)|]  in
+        form_intervals (i+2) new_arr
+    in
+    (* go 2 by 2 to form the x intervals from the vertical intersections *)
+    let vert_intervals = form_intervals 0 [||] in
+    let all_intervals = Array.append vert_intervals hori_intervals in
+    Array.sort (fun (a,_) (b,_) -> compare a b) all_intervals;
+    let int_n = Array.length all_intervals in 
+    let rec merge_intervals i acc = 
+      if i = int_n then 
+        acc
+      else
+        let (curL, curU) = all_intervals.(i) in
+        if (i+1) = int_n then
+          merge_intervals (i+1) (Array.append acc [|(curL, curU)|])
+        else
+        ( let (nL,nU) = all_intervals.(i+1) in
+        if nL <= curU then
+          ( all_intervals.(i+1) <- (curL,nU);
+          merge_intervals (i+1) acc; )
+        else
+          merge_intervals (i+1) (Array.append acc [|(curL, curU)|]); )
+    in
+    Printf.printf "unmerged: ";
+    Array.iter (fun (x,y) -> Printf.printf "(%d,%d) " x y) all_intervals;
+    print_newline();
+    let merged_intervals = merge_intervals 0 [||] in
+    Printf.printf "merged: ";
+    Array.iter (fun (x,y) -> Printf.printf "(%d,%d) " x y) merged_intervals;
+    print_newline();
+  in
+  Array.iteri (fun i array -> 
+    loop_edges i 
+  ) raster;
+  (* Array.iter (fun cord -> let x,y = compress_coords cord in  Printf.printf "%d,%d\n" x y) coords *)
+  
