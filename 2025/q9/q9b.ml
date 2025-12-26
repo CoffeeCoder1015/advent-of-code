@@ -134,12 +134,21 @@ let in_chan = open_in "test.txt" in
       Array.fill array s delta 1;
        ) x_intervals
   ) raster;
-  Array.iter (fun array -> 
-    Array.iter (fun ele -> 
-      match ele with
-      | 0 -> Printf.printf("_")
-      | 1 -> Printf.printf("O")
-     ) array;
-     print_newline()
-  ) raster
+  Array.iteri (fun i x -> if i > 0 then raster.(0).(i) <- raster.(0).(i-1)+x) raster.(0); (* SAT vert *)
+  Array.iteri (fun i x -> if i > 0 then raster.(i).(0) <- raster.(i-1).(0)+x.(0)) raster; (* SAT hori *)
+  let rec build_sat x y =
+    if y = y_range then
+      ()
+    else
+      let left = raster.(x-1).(y) in
+      let top = raster.(x).(y-1) in
+      let diag = raster.(x-1).(y-1) in
+      let current = raster.(x).(y) in
+      raster.(x).(y) <- current + left + top - diag;
+      if x+1 = x_range then
+        build_sat 1 (y+1)
+      else
+        build_sat (x+1) y
+  in
+  build_sat 1 1
   
