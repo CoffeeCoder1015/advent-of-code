@@ -66,7 +66,6 @@ let in_chan = open_in "test.txt" in
   in
   let acc = par 0 [||] in
   Array.sort (fun (_,_,a) (_,_,b) -> b-a) acc;
-  (* Array.iter (fun ((a,b),(c,d),e) -> Printf.printf "(%d,%d) (%d,%d) %d\n" a b c d e ) acc; *)
   let xmap, ymap = get_compression_map coords in
   let x_range,y_range = Hashtbl.length xmap, Hashtbl.length ymap in
   let compress_coords (og_x,og_y) = 
@@ -150,5 +149,32 @@ let in_chan = open_in "test.txt" in
       else
         build_sat (x+1) y
   in
-  build_sat 1 1
-  
+  build_sat 1 1;
+
+  (* Array.iter (fun a -> Array.iter (fun x -> Printf.printf "%d " x) a; print_newline()) raster; *)
+  let acc_n = Array.length acc in
+  let rec filter_max i = 
+    if i = acc_n then
+      -1
+    else
+    let (ra,rb),(rc,rd),real_area = acc.(i) in
+    let (a,b),(c,d) = compress_coords (ra,rb), compress_coords (rc, rd) in
+    let test_area = coord_area (a,b) (c,d) in
+    let verts = [|(a,b);(c,d);(a,d);(c,b)|] in 
+    Array.sort ( fun (x1,y1) (x2,y2) -> (x1+y1)-(x2+y2) ) verts;
+    verts.(0) <- ( verts.(0) |> fun (x,y) -> (x-1,y-1) );
+    let (mx,my) = min verts.(1) verts.(2) in
+    let (nx,ny) = max verts.(1) verts.(2) in
+    verts.(1) <- (mx-1,my);
+    verts.(2) <- (nx,ny-1);
+    let areas = Array.map (fun (x,y) -> if x < 0 || y < 0 then 0 else raster.(y).(x)) verts in
+    areas.(1) <- areas.(1) * -1;
+    areas.(2) <- areas.(2) * -1;
+    let sat_area = Array.fold_left (fun acc x -> acc+x ) 0 areas in
+    if test_area = sat_area then
+      real_area
+    else
+    filter_max (i+1)
+  in
+  let ans = filter_max 0 in
+  Printf.printf "%d\n" ans;
