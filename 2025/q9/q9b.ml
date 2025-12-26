@@ -39,7 +39,7 @@ let get_compression_map coord_arr =
 ;;
 
 
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q9.txt" in
   let length = in_channel_length in_chan in
   let file = really_input_string in_chan length in
   let str_lst_to_xy str_lst = (List.nth str_lst 0 |> int_of_string, List.nth str_lst 1 |> int_of_string) in
@@ -58,14 +58,16 @@ let in_chan = open_in "test.txt" in
       else
       let focus = coords.(idx) in 
       let area = coord_area focus current in 
-      chi (j+1) ( (current, focus, area) :: acc2 )
-      in
-      let acc2_result = chi 0 [] in
-      let new_acc =Array.append (acc2_result |> Array.of_list) acc in
-      par (i+1) new_acc
+      chi (j+1) ( Array.append [|(current,focus,area)|] acc2 )
+    in
+    let acc2_result = chi 0 [||] in
+    let new_acc =Array.append acc2_result acc in
+    par (i+1) new_acc
   in
   let acc = par 0 [||] in
   Array.sort (fun (_,_,a) (_,_,b) -> b-a) acc;
+
+  (* Compress coordinates *)
   let xmap, ymap = get_compression_map coords in
   let x_range,y_range = Hashtbl.length xmap, Hashtbl.length ymap in
   let compress_coords (og_x,og_y) = 
@@ -75,6 +77,8 @@ let in_chan = open_in "test.txt" in
   in
   let raster = Array.make_matrix x_range y_range 0 in
   let comprssed_coords = Array.map compress_coords coords in
+
+  (* Get x-ranges to rasterise *)
   let loop_edges y = 
     (* find horizontal intervals and vertical intersections on y-scanline*)
     let rec helper i lst_v lst_h = 
@@ -126,6 +130,8 @@ let in_chan = open_in "test.txt" in
     let merged_intervals = merge_intervals 0 [||] in
     merged_intervals
   in
+
+  (* rasterise SAT grid *)
   Array.iteri (fun i array -> 
     let x_intervals = loop_edges i in
     Array.iter (fun (s,e) -> 
@@ -133,6 +139,7 @@ let in_chan = open_in "test.txt" in
       Array.fill array s delta 1;
        ) x_intervals
   ) raster;
+
   Array.iteri (fun i x -> if i > 0 then raster.(0).(i) <- raster.(0).(i-1)+x) raster.(0); (* SAT vert *)
   Array.iteri (fun i x -> if i > 0 then raster.(i).(0) <- raster.(i-1).(0)+x.(0)) raster; (* SAT hori *)
   let rec build_sat x y =
@@ -162,9 +169,10 @@ let in_chan = open_in "test.txt" in
     let test_area = coord_area (a,b) (c,d) in
     let verts = [|(a,b);(c,d);(a,d);(c,b)|] in 
     Array.sort ( fun (x1,y1) (x2,y2) -> (x1+y1)-(x2+y2) ) verts;
-    verts.(0) <- ( verts.(0) |> fun (x,y) -> (x-1,y-1) );
+    let (cx,cy) = verts.(0) in
     let (mx,my) = min verts.(1) verts.(2) in
     let (nx,ny) = max verts.(1) verts.(2) in
+    verts.(0) <- (cx-1,cy-1);
     verts.(1) <- (mx-1,my);
     verts.(2) <- (nx,ny-1);
     let areas = Array.map (fun (x,y) -> if x < 0 || y < 0 then 0 else raster.(y).(x)) verts in
