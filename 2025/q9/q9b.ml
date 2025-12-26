@@ -119,21 +119,27 @@ let in_chan = open_in "test.txt" in
         else
         ( let (nL,nU) = all_intervals.(i+1) in
         if nL <= curU then
-          ( all_intervals.(i+1) <- (curL,nU);
+          ( all_intervals.(i+1) <- (curL,max curU nU);
           merge_intervals (i+1) acc; )
         else
           merge_intervals (i+1) (Array.append acc [|(curL, curU)|]); )
     in
-    Printf.printf "unmerged: ";
-    Array.iter (fun (x,y) -> Printf.printf "(%d,%d) " x y) all_intervals;
-    print_newline();
     let merged_intervals = merge_intervals 0 [||] in
-    Printf.printf "merged: ";
-    Array.iter (fun (x,y) -> Printf.printf "(%d,%d) " x y) merged_intervals;
-    print_newline();
+    merged_intervals
   in
   Array.iteri (fun i array -> 
-    loop_edges i 
+    let x_intervals = loop_edges i in
+    Array.iter (fun (s,e) -> 
+      let delta = e-s+1 in 
+      Array.fill array s delta 1;
+       ) x_intervals
   ) raster;
-  (* Array.iter (fun cord -> let x,y = compress_coords cord in  Printf.printf "%d,%d\n" x y) coords *)
+  Array.iter (fun array -> 
+    Array.iter (fun ele -> 
+      match ele with
+      | 0 -> Printf.printf("_")
+      | 1 -> Printf.printf("O")
+     ) array;
+     print_newline()
+  ) raster
   
