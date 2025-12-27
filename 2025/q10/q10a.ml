@@ -37,6 +37,8 @@ let process_line line =
   let skip_table = Hashtbl.create 0 in 
   let insert_skip k = Hashtbl.add skip_table k () in
   let check k = Hashtbl.mem skip_table k  in
+
+  let conclude_signal = ref ( false ) in
   let rec helper queue = 
     let n = Array.length queue in
 
@@ -46,7 +48,6 @@ let process_line line =
     else *)
     let popped_queue = Array.sub queue 1 (n-1) in
     
-    let conclude_signal = ref ( false ) in
     let new_appendeees = Array.fold_left (fun acc x ->
       let k = index_xor hd x in
       if Hashtbl.length k = 0 then
