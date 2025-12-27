@@ -38,26 +38,30 @@ let process_line line =
   let insert_skip k = Hashtbl.add skip_table k () in
   let check k = Hashtbl.mem skip_table k  in
   let rec helper queue = 
-    let i,hd = queue.(0) in
-    if Hashtbl.length hd = 0 then
-      i
-    else
     let n = Array.length queue in
+
+    let i,hd = queue.(0) in
+    (* if Hashtbl.length hd = 0 then
+      i
+    else *)
     let popped_queue = Array.sub queue 1 (n-1) in
     
+    let conclude_signal = ref ( false ) in
     let new_appendeees = Array.fold_left (fun acc x ->
       let k = index_xor hd x in
-      if check k then
+      if Hashtbl.length k = 0 then
+        conclude_signal := true;
+      if check k || !conclude_signal != false then
         acc
       else
         let new_acc = Array.append acc [|(i+1,k)|] in
         insert_skip k;
         new_acc
        ) [||] buttons in
-
+    if !conclude_signal != false then
+      i+1
+    else
     let new_queue =  Array.append popped_queue new_appendeees in
-    Array.sort (fun (a,_) (b,_) -> a-b) new_queue;
-    (* Array.iter (fun (i,arr) -> Printf.printf "%d:" i ; Array.iter (Printf.printf "%d ") arr; Printf.printf "| L:%d\n" ( Array.length arr )) new_queue; print_newline(); *)
     helper ( Array.copy new_queue ) 
   in
   helper [|(0,target_idx)|]  
