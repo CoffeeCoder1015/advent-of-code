@@ -37,38 +37,34 @@ let process_line line =
         |> Array.of_list) 
   in
   
+  let skip_table = Hashtbl.create 0 in 
   let rec helper queue = 
-    let n = Array.length queue in
-    let found = Array.fold_left (fun acci (i,check) -> 
-      if Array.length check = 0 then
-        if ( i < acci ) || acci = -1 then
-          i
-        else
-          acci
-      else
-        acci
-      ) ( -1 ) queue in
-    if found != -1 then
-      found
-    else
     let i,hd = queue.(0) in
-    if i = 3 then
-      0
+    if Array.length hd = 0 then
+      i
     else
-    let new_appendeees =  Array.map (fun x -> (i+1, index_xor hd x )) buttons in
-    let new_queue =  Array.append ( Array.sub queue 1 (n-1) ) new_appendeees in
-    Array.sort (fun (a,_) (b,_) -> a-b) new_queue;
-    (* Array.iter (fun (i,arr) -> Printf.printf "%d:" i ; Array.iter (Printf.printf "%d ") arr; Printf.printf "| L:%d, " ( Array.length arr )) new_queue; print_newline(); *)
-    helper ( Array.copy new_queue )
+    let n = Array.length queue in
+    let popped_queue = Array.sub queue 1 (n-1) in
+    if Hashtbl.mem skip_table hd then
+      helper popped_queue
+    else (
+      Hashtbl.add skip_table hd ();
+      let new_appendeees =  Array.map (fun x -> (i+1, index_xor hd x )) buttons in
+      let new_queue =  Array.append popped_queue new_appendeees in
+      Array.sort (fun (a,_) (b,_) -> a-b) new_queue;
+      (* Array.iter (fun (i,arr) -> Printf.printf "%d:" i ; Array.iter (Printf.printf "%d ") arr; Printf.printf "| L:%d\n" ( Array.length arr )) new_queue; print_newline(); *)
+      helper ( Array.copy new_queue ) )
   in
-  helper [|(0,Array.copy target_idx)|]  
+  helper [|(0,target_idx)|]  
 ;;
 
-let in_chan = open_in "test.txt" in 
+let in_chan = open_in "q10.txt" in 
   let rec line_consumer ans = 
     match input_line in_chan with
     | line -> 
-      line_consumer ans+( process_line line )
+    let partial = process_line line in
+    Printf.printf "%d\n" partial;
+      line_consumer ( ans+ partial)
     | exception End_of_file -> 
       ans
   in
