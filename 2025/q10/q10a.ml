@@ -1,15 +1,10 @@
 let index_xor a b =
-  let check_tbl = Hashtbl.create ( Array.length b ) in
-  Array.iter (fun x -> Hashtbl.add check_tbl x 1) b;
-  Array.iter (fun x -> 
-    if Hashtbl.mem check_tbl x then
-      Hashtbl.replace check_tbl x 0 
-    else Hashtbl.add check_tbl x 1) a;
-  let xored = Hashtbl.to_seq check_tbl |> Seq.filter_map (fun (k,v) -> 
-    if v = 1 then 
-      Some k else 
-    None) in
-  Array.of_seq xored
+  let mut = Hashtbl.copy a in
+  Hashtbl.iter (fun k v -> 
+    if Hashtbl.mem mut k then
+      Hashtbl.remove mut k
+    else Hashtbl.add mut k v  ) b;
+  mut
 ;;
 
 let process_line line = 
@@ -23,18 +18,20 @@ let process_line line =
   let _,target_idx = Array.fold_left (
     fun (i,acc) x -> 
       if x = 1 then 
-        (i+1,Array.append acc [|i|]) 
+        ( Hashtbl.add acc i ();
+        (i+1,acc) ) 
       else 
         (i+1,acc)
-      ) (0,[||]) target_map in
+      ) (0,Hashtbl.create 0) target_map in
 
   let buttons_count = n-2 in
   let buttons = Array.sub split 1 buttons_count
     |> Array.map (fun str -> 
       String.sub str 1 (String.length str -2) 
         |> String.split_on_char ',' 
-        |> List.map int_of_string 
-        |> Array.of_list) 
+        |> List.map (fun x -> (int_of_string x, ()))
+        |> List.to_seq
+        |> Hashtbl.of_seq) 
   in
   
   let skip_table = Hashtbl.create 0 in 
@@ -42,7 +39,7 @@ let process_line line =
   let check k = Hashtbl.mem skip_table k  in
   let rec helper queue = 
     let i,hd = queue.(0) in
-    if Array.length hd = 0 then
+    if Hashtbl.length hd = 0 then
       i
     else
     let n = Array.length queue in
