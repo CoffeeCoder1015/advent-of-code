@@ -1,4 +1,4 @@
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q11.txt" in
   let graph = Hashtbl.create 10 in
   let rec line_consumer _ = 
     match input_line in_chan with
@@ -15,43 +15,46 @@ let in_chan = open_in "test.txt" in
   line_consumer();
   
   Hashtbl.add graph "out" ["out"];
-  let empty = Hashtbl.to_seq_keys graph |> Seq.map (fun a -> (a,[||])) |> Hashtbl.of_seq in
+  (* 0: total 1: none 2: dac 3: fft 4: fft+dac *)
+  let empty = Hashtbl.to_seq_keys graph |> Seq.map (fun a -> (a,[|0;0;0;0;0|])) |> Hashtbl.of_seq in
   
   let init = 
     let tmp = Hashtbl.copy empty in
-    Hashtbl.replace tmp "svr" [|(false,false)|];
+    Hashtbl.replace tmp "svr" [|1;1;0;0;0|];
     tmp
   in
 
-  let dac_transform (_,b) = (true,b) in
-  let fft_transform (a,_) = (a,true) in
   let rec solve state = 
     let new_state = Hashtbl.copy empty in
     Hashtbl.iter (fun k v ->
-      if Array.length v > 0 then
+      if v.(0) > 0 then
         let next_nodes = Hashtbl.find graph k in
         List.iter (fun node -> 
-          let current = Hashtbl.find new_state node in 
-          match node with
+          let current = Hashtbl.find new_state node |> Array.copy in 
+          current.(0) <- v.(0) + current.(0);
+          ( match node with
+          | "fft" -> 
+              current.(3) <- current.(3) + v.(3);
+              current.(3) <- current.(3) + v.(1);
+              current.(4) <- current.(4) + v.(2);
           | "dac" -> 
-            let new_v = Array.map dac_transform v in
-            Hashtbl.replace new_state node (Array.append current new_v)
-          | "fft" ->
-            let new_v = Array.map fft_transform v in
-            Hashtbl.replace new_state node (Array.append current new_v)
-          | _ ->
-            Hashtbl.replace new_state node (Array.append current v)
+              current.(2) <- current.(2) + v.(2);
+              current.(2) <- current.(2) + v.(1);
+              current.(4) <- current.(4) + v.(3);
+          | _ -> 
+              for i = 1 to 4 do
+                current.(i) <- v.(i) + current.(i);
+              done; );
+          Hashtbl.replace new_state node current;
           ) next_nodes;
       ) state; 
       
-    let finished = Hashtbl.fold (fun k v acc -> if Array.length v = 0 || (Array.length v > 0 && k = "out") then acc else false ) new_state true in
+    let finished = Hashtbl.fold (fun k v acc -> if v.(0) = 0 || (v.(0) > 0 && k = "out") then acc else false ) new_state true in
     if finished then
       new_state
     else
       solve new_state
   in
   let res = solve init in
-  let out_chan = Hashtbl.find res "out" in
-  let reached_dac_fft = Array.to_list out_chan |> List.filter (fun (a,b) -> a && b) in
-  Printf.printf "%d\n" (List.length reached_dac_fft)
+  Printf.printf "%d\n" (Hashtbl.find res "out").(4)
 
