@@ -377,10 +377,11 @@ result a_star_search(int* memory){
     /* A* path finding */
     int directions[4][2] = {{1,0},{0,1},{-1,0},{0,-1}};
 
+    int ending_position[2] = {square_size-1,square_size-1};
     for (;pq.heap_length > 0;) {
         mhitem current_pos = minheap_extract(&pq);
         //termination condition
-        if (current_pos.pos[0] == square_size-1 && current_pos.pos[1] == square_size-1) {
+        if (current_pos.pos[0] == ending_position[0] && current_pos.pos[1] == ending_position[1]) {
             break;
         }
 
@@ -402,8 +403,8 @@ result a_star_search(int* memory){
             result next_distance = hashmap_get(distances, next_pos);
 
             if (!next_distance.found || predicted_distance < (uint64_t)next_distance.value ) {
-                // uint64_t adjusted_weight = distance(next_pos,current_pos.pos);
-                mhitem next_frontier = {predicted_distance,{next_pos[0],next_pos[1]}};
+                uint64_t heuristic = distance(next_pos,ending_position);
+                mhitem next_frontier = {predicted_distance+heuristic,{next_pos[0],next_pos[1]}};
 
                 minheap_insert(&pq, next_frontier);
 
@@ -417,7 +418,6 @@ result a_star_search(int* memory){
         }
     }
     
-    int ending_position[2] = {square_size-1,square_size-1};
     result r_last_dist = hashmap_get(distances,ending_position);
 
     /* A* cleanup */
