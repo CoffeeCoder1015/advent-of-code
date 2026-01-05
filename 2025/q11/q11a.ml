@@ -1,4 +1,4 @@
-let in_chan = open_in "test.txt" in
+let in_chan = open_in "q11.txt" in
   let graph = Hashtbl.create 10 in
   let rec line_consumer _ = 
     match input_line in_chan with
