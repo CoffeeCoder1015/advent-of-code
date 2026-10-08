@@ -6,7 +6,7 @@ using namespace std;
 
 int main() {
   string line;
-  ifstream file = ifstream("q1a.txt");
+  ifstream file = ifstream("q1.txt");
 
   int sum = 0;
   while (getline(file, line)) {
