@@ -63,7 +63,6 @@ int main() {
       // ans
       string substr = input.substr(p, input.length() - p);
       ans += stoi(&substr[0]);
-      printf("%s\n", substr.c_str());
       touched = false;
     }
     buffered = false; // readout
